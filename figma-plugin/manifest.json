@@ -1,0 +1,11 @@
+{
+  "name": "FitSpace V7 — Instant Nav, Fast UX, Real Photos & 5-Tier RBAC",
+  "id": "fitspace-pwa-karya-berdua-builder",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["none"]
+  }
+}

@@ -1,0 +1,65 @@
+# Dependencies
+/vendor/
+/node_modules/
+/public/build/
+/public/hot
+/public/storage
+
+# Secrets & Environment (ZERO LEAK POLICY)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.jks
+secrets/
+credentials*.json
+*service-account*.json
+
+# Internal Documentation, Agent Workflows & Specs (Keep Local Only, Never Push)
+*.md
+!/README.md
+/.agents/
+/docs/
+
+# Local Databases & Backups
+/database/*.sqlite
+/database/*.sqlite-journal
+/database/*.sqlite-wal
+/database/*.sqlite-shm
+*.sql.gz
+*.dump
+backups/
+
+# Laravel Runtime & Logs
+/storage/*.key
+/storage/app/private/*
+!/storage/app/private/.gitignore
+/storage/app/public/*
+!/storage/app/public/.gitignore
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/storage/logs/*.log
+/bootstrap/cache/*.php
+!/bootstrap/cache/.gitignore
+
+# Testing & Build Artifacts
+/.phpunit.result.cache
+/coverage/
+/dist/
+/_laravel_*
+/.vercel/
+/.netlify/
+/.playwright-mcp/
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-error.log*
+.idea/
+.vscode/settings.json

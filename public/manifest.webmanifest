@@ -1,0 +1,33 @@
+{
+  "name": "FitSpace — Integrated Fitness Center Platform",
+  "short_name": "FitSpace",
+  "description": "Platform manajemen fitness center terintegrasi: booking kelas dinamis, jadwal real-time, membership fleksibel, pembayaran digital, dan pemantauan perkembangan latihan.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F8FAFC",
+  "theme_color": "#0B1120",
+  "lang": "id-ID",
+  "categories": ["fitness", "health", "lifestyle", "business"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Jelajahi Kelas",
+      "short_name": "Kelas",
+      "url": "/#katalog-kelas"
+    },
+    {
+      "name": "Paket Membership",
+      "short_name": "Membership",
+      "url": "/#membership"
+    }
+  ]
+}

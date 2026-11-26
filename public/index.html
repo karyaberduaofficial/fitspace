@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FitSpace — Integrated Fitness Center Platform</title>
+    <meta
+      name="description"
+      content="FitSpace adalah platform manajemen fitness center modern: booking kelas Pilates, Zumba, Boxing, Swimming, Taekwondo, hingga Yoga secara real-time, lengkap dengan paket membership fleksibel dan pemantauan perkembangan latihan."
+    />
+    <link rel="canonical" href="https://fitspace.id/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="FitSpace — Integrated Fitness Center Platform" />
+    <meta
+      property="og:description"
+      content="Kelola kelas, coach tersertifikasi, jadwal live, membership fleksibel, dan perkembangan latihan dalam satu platform FitSpace."
+    />
+    <meta property="og:url" content="https://fitspace.id/" />
+    <meta name="theme-color" content="#0B1120" />
+    <link rel="icon" type="image/svg+xml" href="/icons/fitspace-logo.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="/styles/tokens.css" />
+    <link rel="stylesheet" href="/styles/main.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "FitSpace",
+        "url": "https://fitspace.id/",
+        "email": "hello@fitspace.id",
+        "description": "Platform manajemen fitness center terintegrasi untuk kelas dinamis, jadwal live, membership, dan pemantauan progres latihan."
+      }
+    </script>
+  </head>
+  <body data-default-activity="portal">
+    <a href="#main-content" class="skip-link">Lewati ke konten utama</a>
+
+    <!-- Clean Sticky Site Header -->
+    <header class="site-header">
+      <div class="container nav-bar">
+        <a href="#main-content" class="brand" id="brand-home-link">
+          <img
+            src="/icons/fitspace-logo.svg"
+            alt="Logo FitSpace"
+            class="brand-logo"
+            width="40"
+            height="40"
+          />
+          <span class="brand-text">
+            <span class="brand-title">FitSpace</span>
+          </span>
+        </a>
+
+        <button
+          type="button"
+          class="nav-toggle"
+          id="nav-toggle-btn"
+          aria-expanded="false"
+          aria-controls="primary-navigation"
+          aria-label="Buka menu navigasi"
+        >
+          Menu
+        </button>
+
+        <nav aria-label="Navigasi utama">
+          <ul id="primary-navigation" class="nav-links">
+            <li><a href="#katalog-kelas" data-nav="portal">Katalog Kelas</a></li>
+            <li><a href="#jadwal-live" data-nav="portal">Jadwal</a></li>
+            <li><a href="#membership" data-nav="portal">Membership</a></li>
+            <li><a href="#workspace-section" id="nav-workspace-link" class="is-hidden">Dashboard Saya</a></li>
+          </ul>
+        </nav>
+
+        <div class="nav-actions" id="nav-auth-actions">
+          <button type="button" id="open-login-btn" class="btn btn-outline btn-sm">Masuk</button>
+          <button type="button" id="open-register-btn" class="btn btn-primary btn-sm">Booking &amp; Daftar</button>
+        </div>
+
+        <div class="nav-actions is-hidden" id="nav-user-actions">
+          <span id="nav-user-badge" class="pill pill-info">USER</span>
+          <button type="button" id="switch-view-btn" class="btn btn-outline btn-sm">Dashboard</button>
+          <button type="button" id="logout-btn" class="btn btn-dark btn-sm">Keluar</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <!-- ==================== PUBLIC PORTAL VIEW ==================== -->
+      <div id="public-portal-view">
+        <!-- Executive Hero with Animated FitSpace Studio Backdrop -->
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero-backdrop" aria-hidden="true"></div>
+          <div class="hero-aurora" aria-hidden="true"></div>
+
+          <div class="container hero-grid">
+            <div class="hero-copy animate-rise">
+              <span class="pill pill-info" id="active-activity-badge">INTEGRATED FITNESS CENTER PLATFORM</span>
+              <h1 id="hero-title" class="hero-brand-display">FitSpace</h1>
+              <p class="hero-lead" id="hero-subtitle">
+                Wujudkan tubuh lebih sehat, bugar, dan penuh energi bersama FitSpace. Dari Reformer Pilates, Zumba,
+                Boxing, Yoga, hingga kelas renang dan bela diri — pilih kelas favorit Anda, berlatih bersama Coach
+                tersertifikasi, dan mulai gaya hidup aktif hari ini!
+              </p>
+
+              <div class="cta-group">
+                <a href="#katalog-kelas" id="hero-primary-cta" class="btn btn-primary">Jelajahi &amp; Booking Kelas</a>
+                <a href="#membership" class="btn btn-outline">Lihat Paket Membership</a>
+                <button type="button" id="hero-install-btn" class="btn btn-dark is-hidden">Install FitSpace</button>
+              </div>
+
+              <div class="proof-grid" aria-label="Keunggulan utama FitSpace">
+                <div class="proof-card">
+                  <strong id="stat-classes-count">6 Kategori · 6 Kelas</strong>
+                  <span>Studio &amp; Program Lengkap</span>
+                </div>
+                <div class="proof-card">
+                  <strong>Maks H-8 Jam</strong>
+                  <span>Reschedule Fleksibel</span>
+                </div>
+                <div class="proof-card">
+                  <strong>Coach Tersertifikasi</strong>
+                  <span>Latihan Terarah &amp; Terukur</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Schedule Board -->
+            <aside class="live-panel animate-rise-delay" id="jadwal-live" aria-label="Jadwal live kelas hari ini">
+              <div class="live-panel-head">
+                <div>
+                  <h2>Jadwal Kelas Aktif</h2>
+                  <p>Update ketersediaan slot studio secara real-time</p>
+                </div>
+                <span class="pill pill-success live-pill"><span class="live-dot" aria-hidden="true"></span>LIVE</span>
+              </div>
+              <div class="live-list" id="hero-live-schedules">
+                <div class="live-row">
+                  <div>
+                    <strong>Memuat jadwal kelas...</strong>
+                    <span>Menghubungkan ke server FitSpace</span>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- Dynamic Class Catalog with Photography -->
+        <section id="katalog-kelas" class="section section-catalog" aria-labelledby="catalog-title">
+          <div class="container">
+            <div class="section-head">
+              <div>
+                <h2 id="catalog-title" class="section-title">Katalog Kelas FitSpace</h2>
+                <p class="section-lead" id="activity-summary-label">
+                  Temukan program latihan sesuai level dan tujuan kebugaran Anda — dari pemula hingga intensif.
+                </p>
+              </div>
+              <div class="catalog-filters">
+                <div class="filter-pills" id="category-filter-bar" role="tablist" aria-label="Filter kategori olahraga"></div>
+                <select id="branch-filter" class="branch-pill-select" aria-label="Filter lokasi cabang">
+                  <option value="">Semua Cabang</option>
+                </select>
+              </div>
+            </div>
+            <div class="cards-grid classes-grid" id="public-classes-grid"></div>
+          </div>
+        </section>
+
+        <!-- Membership & Paket Kelas -->
+        <section id="membership" class="section section-membership" aria-labelledby="membership-title">
+          <div class="membership-backdrop" aria-hidden="true"></div>
+          <div class="container membership-content">
+            <div class="section-head">
+              <div>
+                <span class="pill pill-info">PILIHAN PAKET TERBAIK</span>
+                <h2 id="membership-title" class="section-title">Program Membership &amp; Paket Kuota Kelas</h2>
+                <p class="section-lead">
+                  Beragam pilihan fleksibel mulai dari paket sesi, membership bulanan, unlimited all-access, hingga VIP tahunan dengan pemotongan kuota otomatis.
+                </p>
+              </div>
+            </div>
+            <div class="cards-grid plans-grid" id="public-membership-grid"></div>
+          </div>
+        </section>
+
+        <!-- 5-Tier Role Access & Approval Governance Overview -->
+        <section id="akses-peran" class="section section-surface" aria-labelledby="roles-title">
+          <div class="container">
+            <div class="section-head">
+              <div>
+                <span class="pill pill-info">TATA KELOLA 4 PERAN + AKUN TAMU</span>
+                <h2 id="roles-title" class="section-title">Hak Akses &amp; Alur Persetujuan FitSpace</h2>
+                <p class="section-lead">
+                  Setiap peran memiliki hak akses terpisah yang aman — mulai dari pendaftaran, verifikasi usia 18+ untuk Member, perwakilan Orang Tua untuk anak, persetujuan Coach, hingga kontrol eksklusif Admin.
+                </p>
+              </div>
+              <div class="format-group">
+                <button type="button" class="btn btn-outline btn-sm" data-action="guest-login">Coba Akun Tamu</button>
+                <button type="button" class="btn btn-dark btn-sm" data-action="open-admin-login">Portal Admin Khusus</button>
+              </div>
+            </div>
+            <div class="roles-matrix-grid">
+              <article class="card role-tier-card">
+                <span class="pill pill-info">USIA 18+ TAHUN</span>
+                <h3>Member (Dewasa 18+)</h3>
+                <p>Pendaftaran mandiri khusus usia 18 tahun ke atas (disetujui Coach), pilih membership, booking kelas, reschedule H-8 jam, QR absensi, dan unduh laporan PDF/Excel/Word.</p>
+                <div class="card-foot">
+                  <button type="button" class="btn btn-primary btn-sm btn-block" data-action="open-register-role" data-role="member">Daftar Member (18+)</button>
+                </div>
+              </article>
+              <article class="card role-tier-card">
+                <span class="pill pill-success">PERWAKILAN ANAK (&lt;18)</span>
+                <h3>Orang Tua / Wali</h3>
+                <p>Mewakili peserta anak di bawah 18 tahun (disetujui Coach): kelola profil anak, pilih membership &amp; kelas sesuai usia, sesuaikan jadwal, QR absensi, serta unduh rapor anak.</p>
+                <div class="card-foot">
+                  <button type="button" class="btn btn-dark btn-sm btn-block" data-action="open-register-role" data-role="guardian">Daftar Orang Tua / Wali</button>
+                </div>
+              </article>
+              <article class="card role-tier-card">
+                <span class="pill pill-warning">PERSETUJUAN ADMIN</span>
+                <h3>Coach / Pelatih</h3>
+                <p>Wajib disetujui Admin sebelum login. Berwenang menyetujui akun Member &amp; Orang Tua, memunculkan nilai (1–4) &amp; laporan, memindai QR absensi, serta mengajukan sinkronisasi jadwal.</p>
+                <div class="card-foot">
+                  <button type="button" class="btn btn-outline btn-sm btn-block" data-action="open-register-role" data-role="coach">Ajukan Akun Coach</button>
+                </div>
+              </article>
+              <article class="card role-tier-card role-tier-admin">
+                <span class="pill pill-dark">PORTAL ADMIN KHUSUS</span>
+                <h3>Administrator</h3>
+                <p>Hanya dapat diloginkan oleh Admin melalui Portal Admin Khusus untuk menyetujui akun Coach, menyinkronkan jadwal pelatih &amp; member, serta menyelesaikan masalah operasional.</p>
+                <div class="card-foot">
+                  <button type="button" class="btn btn-primary btn-sm btn-block" data-action="open-admin-login">Login Portal Admin</button>
+                </div>
+              </article>
+              <article class="card role-tier-card role-tier-guest">
+                <span class="pill pill-info">AKSES TERBATAS</span>
+                <h3>Akun Tamu (Guest)</h3>
+                <p>Dapat menjelajahi katalog kelas, jadwal live, dan 6 paket membership. Untuk booking, pilih membership, absensi QR, dan melihat laporan, wajib login Member (18+) atau Orang Tua.</p>
+                <div class="card-foot">
+                  <button type="button" class="btn btn-outline btn-sm btn-block" data-action="guest-login">Masuk Akun Tamu</button>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ==================== AUTHENTICATED 4-ROLE WORKSPACE VIEW ==================== -->
+      <section id="workspace-section" class="workspace-shell is-hidden" aria-label="Dashboard peran pengguna">
+        <div class="workspace-bg-layer" aria-hidden="true"></div>
+        <div class="workspace-ambient-orbs" aria-hidden="true"></div>
+
+        <div class="container workspace-inner">
+          <div class="workspace-hero-banner">
+            <div class="workspace-hero-copy">
+              <span class="pill pill-dark" id="workspace-banner-role">WORKSPACE FITSPACE</span>
+              <h2 id="workspace-banner-title">Selamat Datang di Dashboard FitSpace</h2>
+              <p id="workspace-banner-sub">Pantau jadwal, kehadiran, progres latihan, dan operasional studio secara real-time.</p>
+            </div>
+            <div class="workspace-hero-actions">
+              <button type="button" id="toggle-hud-btn" class="btn btn-glass btn-sm">Mode Kacamata Pintar (G)</button>
+            </div>
+          </div>
+
+          <div class="workspace-grid">
+            <aside class="role-sidebar" aria-label="Menu navigasi dashboard">
+              <div class="role-sidebar-head">
+                <strong id="sidebar-user-name">Pengguna FitSpace</strong>
+                <span id="sidebar-role-badge">ROLE</span>
+              </div>
+              <ul id="sidebar-nav-list" class="sidebar-nav"></ul>
+            </aside>
+
+            <div id="workspace-main" class="workspace-main" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ==================== SMART GLASSES OPTICAL BLACK HUD OVERLAY ==================== -->
+    <aside
+      id="hud-overlay"
+      class="hud-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="hud-card-title"
+      aria-hidden="true"
+    >
+      <div class="hud-stage">
+        <div class="hud-top-meta">
+          <span id="hud-counter">OPTICAL HUD 1 / 4 · FITSPACE</span>
+          <span>WCAG AAA &gt; 14:1</span>
+        </div>
+        <h2 id="hud-card-title">FitSpace Optical HUD</h2>
+        <p id="hud-card-body">Navigasi hands-free dengan tombol panah kiri/kanan, Read-Aloud TTS, dan perintah suara.</p>
+        <p id="hud-voice-status" class="hud-status" aria-live="polite">
+          Siap · Shortcut: Panah Kiri/Kanan, G (Toggle HUD), Esc (Keluar).
+        </p>
+        <div class="hud-actions">
+          <button type="button" id="hud-prev-btn" class="hud-btn">&larr; Sebelumnya</button>
+          <button type="button" id="hud-next-btn" class="hud-btn hud-btn-primary">Berikutnya &rarr;</button>
+          <button type="button" id="hud-speak-btn" class="hud-btn">Bacakan (TTS)</button>
+          <button type="button" id="hud-voice-btn" class="hud-btn">Perintah Suara</button>
+          <button type="button" id="hud-exit-btn" class="hud-btn">Keluar HUD (Esc)</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================== AUTH / BOOKING / ACTION MODAL ==================== -->
+    <div id="app-modal" class="modal-backdrop is-hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3 id="modal-title">FitSpace</h3>
+          <button type="button" id="close-modal-btn" class="btn btn-outline btn-sm" aria-label="Tutup dialog">Tutup</button>
+        </div>
+        <div id="modal-body"></div>
+      </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="alert-toast" class="alert-toast is-hidden" role="status" aria-live="polite"></div>
+
+    <!-- ==================== COMPLETE 4-COLUMN CORPORATE FOOTER ==================== -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-col">
+            <div class="brand">
+              <img
+                src="/icons/fitspace-logo.svg"
+                alt="Logo FitSpace"
+                class="brand-logo"
+                width="40"
+                height="40"
+              />
+              <span class="brand-text">
+                <span class="brand-title footer-brand-title">FitSpace</span>
+              </span>
+            </div>
+            <p class="footer-desc">
+              Platform manajemen fitness center terintegrasi untuk pengelolaan kelas dinamis, jadwal studio real-time,
+              pembayaran digital, absensi cepat, serta pemantauan perkembangan latihan peserta.
+            </p>
+          </div>
+
+          <div class="footer-col">
+            <h4>Fitur Platform</h4>
+            <ul class="footer-list">
+              <li><a href="#katalog-kelas">Katalog Kelas Dinamis</a></li>
+              <li><a href="#jadwal-live">Jadwal Studio Real-Time</a></li>
+              <li><a href="#membership">Membership &amp; Paket Sesi</a></li>
+              <li><a href="#akses-peran">Hak Akses 4 Peran &amp; Tamu</a></li>
+              <li><button type="button" class="footer-link-btn" data-action="open-admin-login">Portal Login Admin Khusus</button></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h4>Cabang &amp; Alamat Resmi</h4>
+            <p><strong>Jakarta Selatan (Pusat):</strong> Jl. Kemang Raya No. 88, Kemang, Jakarta Selatan 12730</p>
+            <p><strong>Bandung (Cabang):</strong> Jl. Ir. H. Juanda No. 142, Dago, Kota Bandung 40132</p>
+            <p><strong>Jam Layanan:</strong> Senin – Minggu, 06:00 – 21:00 WIB</p>
+          </div>
+
+          <div class="footer-col">
+            <h4>Kontak &amp; Media Sosial</h4>
+            <p>Email: hello@fitspace.id</p>
+            <p>Telp / WA Resmi: (021) 5088-4200</p>
+            <p>Instagram: @fitspace.id &bull; TikTok: @fitspace.id</p>
+            <p>YouTube: FitSpace Official &bull; LinkedIn: FitSpace Indonesia</p>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <span>&copy; 2026 FitSpace. Seluruh hak cipta dilindungi.</span>
+          <div class="powered-badge">
+            <span>Powered by</span>
+            <strong>Karya Berdua Official</strong>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/scripts/app.js" defer></script>
+  </body>
+</html>
