@@ -23,3 +23,5 @@ Platform ini menghubungkan kebutuhan pengelola studio, pelatih, member dewasa, s
 ## Kepemilikan
 
 Dikembangkan oleh **Karya Berdua Official**.
+
+
