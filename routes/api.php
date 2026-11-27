@@ -86,12 +86,13 @@ Route::prefix('v1')->group(function () {
         });
 
         // Coach Operational Workspace (requires Admin-approved Coach!)
-        // Includes: Member/Guardian Account Approval, Scores & Report Publishing, QR Attendance, Materials, Availability Sync
+        // Coach receives schedules from Admin, scans QR, manages materials/scores, and submits schedule reschedule requests to Admin.
         Route::middleware(['role:coach,admin', 'approved'])->group(function () {
             Route::get('/coach/dashboard', [CoachController::class, 'dashboard']);
             Route::get('/coach/pending-accounts', [CoachController::class, 'pendingAccounts']);
             Route::post('/coach/accounts/{id}/decision', [CoachController::class, 'decideAccount']);
             Route::post('/coach/bookings/{id}/confirm', [CoachController::class, 'confirmBooking']);
+            Route::post('/coach/schedule-reschedules', [CoachController::class, 'requestScheduleReschedule']);
             Route::post('/attendance/scan-qr', [CoachController::class, 'scanQr']);
             Route::post('/coach/materials', [CoachController::class, 'storeMaterial']);
             Route::post('/coach/evaluations', [CoachController::class, 'storeEvaluation']);
@@ -100,14 +101,17 @@ Route::prefix('v1')->group(function () {
         });
 
         // Admin Exclusive Governance & Multi-Branch Control
-        // Includes: Coach Account Approvals, Coach-Member Schedule Sync, Issue Resolution Center, Dynamic Classes, Finance & Reports
+        // Central authority: Coach/Member/Guardian Account Approvals, Class & Membership Approvals, Coach Schedule Reschedule ACC -> Member/Guardian
         Route::middleware('role:admin')->prefix('admin')->group(function () {
             Route::get('/dashboard', [AdminController::class, 'dashboard']);
             Route::get('/approvals', [AdminController::class, 'approvals']);
             Route::post('/coaches/{id}/decision', [AdminController::class, 'decideCoach']);
             Route::post('/users/{id}/decision', [AdminController::class, 'decideUserAccount']);
+            Route::post('/bookings/{id}/approve', [AdminController::class, 'approveBooking']);
+            Route::post('/memberships/{id}/approve', [AdminController::class, 'approveMembership']);
             Route::get('/schedule-sync', [AdminController::class, 'scheduleSync']);
             Route::post('/availabilities/{id}/decision', [AdminController::class, 'decideAvailability']);
+            Route::post('/schedule-reschedules/{id}/decision', [AdminController::class, 'decideCoachScheduleReschedule']);
             Route::get('/issues', [AdminController::class, 'issues']);
             Route::post('/issues/{id}/resolve', [AdminController::class, 'resolveIssue']);
             Route::post('/categories', [AdminController::class, 'storeCategory']);

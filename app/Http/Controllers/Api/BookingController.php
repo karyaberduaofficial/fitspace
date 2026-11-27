@@ -45,10 +45,23 @@ class BookingController extends Controller
 
         PublicController::clearBootstrapCache();
 
+        if ($result['booking']->status === 'pending_payment') {
+            $adminIds = DB::table('users')->where('role', 'admin')->where('is_active', true)->pluck('id');
+            foreach ($adminIds as $aid) {
+                $this->audit->notify(
+                    (int) $aid,
+                    'booking_pending_admin',
+                    'Pengajuan Pemilihan Kelas Baru',
+                    "{$request->user()->name} mengajukan booking kelas {$result['booking']->booking_code}. Tinjau & setujui di panel Admin.",
+                    ['booking_id' => $result['booking']->id]
+                );
+            }
+        }
+
         return response()->json([
             'message' => $result['booking']->status === 'confirmed'
                 ? 'Booking kelas terkonfirmasi dan QR Code sekali pakai telah diterbitkan.'
-                : 'Booking dibuat. Silakan selesaikan pembayaran melalui payment gateway.',
+                : 'Pemilihan kelas berhasil diajukan! Menunggu persetujuan Admin FitSpace agar kelas & tiket QR aktif.',
             'booking' => $result['booking'],
             'payment' => $result['payment'],
             'qr' => $result['qr'],

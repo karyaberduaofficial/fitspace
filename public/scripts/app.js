@@ -305,6 +305,84 @@
     );
   }
 
+  const DONUT_COLORS = ['#1D4ED8', '#0EA5E9', '#15803D', '#D97706', '#6366F1', '#E11D48'];
+
+  function makeDonutChartSvg(items = [], centerBig = '100%', centerSub = 'Total') {
+    const r = 64;
+    const c = 2 * Math.PI * r;
+    const valid = (items || []).filter((it) => Number(it.count || 0) > 0);
+    const total = valid.reduce((acc, it) => acc + Number(it.count || 0), 0);
+    let offset = 0;
+    const arcs = total > 0
+      ? valid.map((it, idx) => {
+          const frac = Number(it.count || 0) / total;
+          const seg = Math.max(4, frac * c - 2.5);
+          const color = DONUT_COLORS[idx % DONUT_COLORS.length];
+          const dashOffset = -offset;
+          offset += frac * c;
+          return `<circle cx="90" cy="90" r="${r}" fill="none" stroke="${color}" stroke-width="22" stroke-dasharray="${seg.toFixed(2)} ${(c - seg).toFixed(2)}" stroke-dashoffset="${dashOffset.toFixed(2)}" transform="rotate(-90 90 90)"/>`;
+        }).join('')
+      : `<circle cx="90" cy="90" r="${r}" fill="none" stroke="#CBD5E1" stroke-width="22"/>`;
+
+    const legend = valid.length
+      ? valid.map((it, idx) => `
+          <div class="donut-legend-row">
+            <span class="donut-legend-left"><span class="donut-swatch donut-swatch-${idx % 6}"></span>${esc(it.name)}</span>
+            <strong>${esc(it.count)} (${esc(it.pct)}%)</strong>
+          </div>`).join('')
+      : '<p>Belum ada distribusi booking kelas.</p>';
+
+    return `
+      <div class="donut-layout">
+        <svg viewBox="0 0 180 180" class="donut-svg" role="img" aria-label="Grafik lingkaran distribusi kelas ${esc(centerBig)}">
+          <circle cx="90" cy="90" r="${r}" fill="none" stroke="#E2E8F0" stroke-width="22"/>
+          ${arcs}
+          <circle cx="90" cy="90" r="46" fill="#FFFFFF"/>
+          <text x="90" y="86" text-anchor="middle" font-size="21" font-weight="800" fill="#0B1120">${esc(centerBig)}</text>
+          <text x="90" y="106" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">${esc(centerSub)}</text>
+        </svg>
+        <div class="donut-legend">${legend}</div>
+      </div>`;
+  }
+
+  function makeRingChartSvg(percent = 0, subLabel = 'Progres', onDark = false) {
+    const pct = Math.max(0, Math.min(100, Math.round(Number(percent || 0))));
+    const r = 42;
+    const c = 2 * Math.PI * r;
+    const filled = (pct / 100) * c;
+    const track = onDark ? '#1E293B' : '#E2E8F0';
+    const stroke = pct >= 70 ? (onDark ? '#38BDF8' : '#15803D') : pct >= 35 ? '#1D4ED8' : '#D97706';
+    const textMain = onDark ? '#FFFFFF' : '#0B1120';
+    const textSub = onDark ? '#94A3B8' : '#475569';
+    return `
+      <svg viewBox="0 0 112 112" class="ring-svg" role="img" aria-label="${esc(subLabel)} ${pct}%">
+        <circle cx="56" cy="56" r="${r}" fill="none" stroke="${track}" stroke-width="11"/>
+        <circle cx="56" cy="56" r="${r}" fill="none" stroke="${stroke}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${filled.toFixed(2)} ${(c - filled).toFixed(2)}" transform="rotate(-90 56 56)"/>
+        <text x="56" y="54" text-anchor="middle" font-size="20" font-weight="800" fill="${textMain}">${pct}%</text>
+        <text x="56" y="70" text-anchor="middle" font-size="10" font-weight="700" fill="${textSub}">${esc(subLabel)}</text>
+      </svg>`;
+  }
+
+  function renderScheduleChangeNotifications(notifications = []) {
+    const relevant = (notifications || []).filter((n) => n.type === 'coach_schedule_rescheduled').slice(0, 3);
+    if (!relevant.length) return '';
+    return `
+      <div class="schedule-notif-banner" role="status" aria-live="polite">
+        <div class="section-head">
+          <strong>Pemberitahuan Perubahan Jadwal (Disetujui Admin)</strong>
+          <span class="pill pill-info">${relevant.length} INFO TERBARU</span>
+        </div>
+        ${relevant.map((n) => `
+          <div class="schedule-notif-item">
+            <div>
+              <strong>${esc(n.title)}</strong>
+              <div>${esc(n.body)}</div>
+            </div>
+            <small>${esc(formatDateTime(n.created_at))}</small>
+          </div>`).join('')}
+      </div>`;
+  }
+
   // ---------- Modal Helpers ----------
   function openModal(title, htmlContent) {
     $('modal-title').textContent = title;
@@ -600,8 +678,8 @@
           <div class="field">
             <label for="reg-role">Jenis Akun</label>
             <select id="reg-role" name="role">
-              <option value="member"${role === 'member' ? ' selected' : ''}>Member — Khusus Usia 18 Tahun ke Atas (Disetujui Coach)</option>
-              <option value="guardian"${role === 'guardian' ? ' selected' : ''}>Orang Tua / Wali — Mewakili Anak &lt; 18 Thn (Disetujui Coach)</option>
+              <option value="member"${role === 'member' ? ' selected' : ''}>Member — Khusus Usia 18 Tahun ke Atas (Disetujui Admin)</option>
+              <option value="guardian"${role === 'guardian' ? ' selected' : ''}>Orang Tua / Wali — Mewakili Anak &lt; 18 Thn (Disetujui Admin)</option>
               <option value="coach"${role === 'coach' ? ' selected' : ''}>Coach / Pelatih — Wajib Persetujuan Admin</option>
             </select>
           </div>
@@ -694,8 +772,8 @@
       btn.textContent = role === 'coach'
         ? 'Kirim Pengajuan Akun Coach ke Admin'
         : role === 'guardian'
-        ? 'Daftar Orang Tua / Wali (Verifikasi Coach)'
-        : 'Daftar Member 18+ (Verifikasi Coach)';
+        ? 'Daftar Orang Tua / Wali (Verifikasi Admin)'
+        : 'Daftar Member 18+ (Verifikasi Admin)';
     }
   }
 
@@ -776,10 +854,10 @@
       $('sidebar-user-name').textContent = state.user.name;
       $('sidebar-role-badge').textContent = isGuest ? 'AKUN TAMU (PRATINJAU)' : `PERAN: ${roleLabel}`;
       const roleTitles = {
-        admin: ['PORTAL ADMIN KHUSUS FITSPACE', `Selamat Datang, ${state.user.name}`, 'Setujui akun Coach, sinkronkan jadwal pelatih & member, selesaikan tiket masalah, dan kelola laporan PDF/Excel/Word.'],
-        coach: ['WORKSPACE COACH / PELATIH', `Halo, ${state.user.name}`, 'Setujui akun Member (18+) & Orang Tua, munculkan nilai evaluasi (1–4) & laporan, validasi QR, dan ajukan sinkronisasi jadwal.'],
-        guardian: ['WORKSPACE ORANG TUA / WALI (<18 THN)', `Halo, ${state.user.name}`, 'Kelola profil & jadwal latihan anak sesuai usia, pilih membership, pantau absensi QR, serta unduh rapor PDF/Word.'],
-        member: ['MEMBER WORKSPACE (USIA 18+)', `Halo, ${state.user.name}`, 'Pilih membership & kelas, sesuaikan jadwal (H-8 jam), tampilkan tiket QR absensi, pantau nilai Coach, dan unduh laporan.'],
+        admin: ['PORTAL ADMIN KHUSUS FITSPACE', `Selamat Datang, ${state.user.name}`, 'Setujui akun, pemilihan kelas & membership Member/Orang Tua, ACC reschedule jadwal Coach untuk diteruskan ke peserta, dan kelola laporan PDF/Excel/Word.'],
+        coach: ['WORKSPACE COACH / PELATIH', `Halo, ${state.user.name}`, 'Terima jadwal mengajar resmi dari Admin, validasi QR absensi, munculkan nilai evaluasi (1–4) & laporan, atau ajukan reschedule jadwal ke Admin jika berhalangan.'],
+        guardian: ['WORKSPACE ORANG TUA / WALI (<18 THN)', `Halo, ${state.user.name}`, 'Kelola profil & pemilihan kelas/membership anak (ACC Admin), terima notifikasi perubahan jadwal resmi, pantau absensi QR, serta unduh rapor PDF/Word.'],
+        member: ['MEMBER WORKSPACE (USIA 18+)', `Halo, ${state.user.name}`, 'Pilih membership & kelas (disetujui Admin), terima update perubahan jadwal resmi, tampilkan tiket QR absensi, pantau nilai Coach, dan unduh laporan.'],
         guest: ['MODE AKUN TAMU (AKSES TERBATAS)', `Halo, ${state.user.name}`, 'Anda dapat melihat katalog kelas, jadwal live, dan 6 paket membership. Login sebagai Member (18+) atau Orang Tua / Wali untuk akses penuh.'],
       };
       const [rBadge, rTitle, rSub] = roleTitles[isGuest ? 'guest' : state.user.role] || roleTitles.member;
@@ -874,12 +952,12 @@
       showGuestUpgradeModal('Booking & Penyesuaian Jadwal Kelas');
       return;
     }
-    // Live approval check BEFORE blocking — so accounts JUST approved by Coach work on the very first click!
+    // Live approval check BEFORE blocking — so accounts JUST approved by Admin work on the very first click!
     if (state.user.role !== 'admin' && state.user.approval_status !== 'approved') {
       await syncAuthStatus(true);
     }
     if (state.user.role !== 'admin' && state.user.approval_status !== 'approved') {
-      showToast('Akun Anda masih menunggu persetujuan Coach / Pelatih sebelum dapat melakukan booking.', true);
+      showToast('Akun Anda masih menunggu persetujuan Admin FitSpace sebelum dapat melakukan booking.', true);
       return;
     }
     const sched = state.schedules.find((s) => String(s.id) === String(scheduleId));
@@ -971,8 +1049,8 @@
     if (role === 'admin') {
       return [
         ['overview', 'Dashboard & Keuangan'],
-        ['approvals', 'Persetujuan Coach & Akun'],
-        ['schedules', 'Sinkronisasi Jadwal Pelatih ↔ Member'],
+        ['approvals', 'Persetujuan Akun, Kelas & Membership'],
+        ['schedules', 'Jadwal & Reschedule Coach'],
         ['issues', 'Pusat Penanganan Masalah'],
         ['classes', 'Kelas Dinamis & Kategori'],
         ['bookings', 'Booking & Pembayaran'],
@@ -984,10 +1062,9 @@
     if (role === 'coach') {
       return [
         ['overview', 'Jadwal & Scan QR'],
-        ['approvals', 'Persetujuan Member & Orang Tua'],
+        ['reschedule', 'Ajukan Reschedule Jadwal'],
         ['evaluations', 'Nilai (1–4) & Publikasi Laporan'],
         ['materials', 'Materi Pembelajaran'],
-        ['availability', 'Sinkronisasi Jadwal ke Admin'],
         ['issues', 'Lapor Masalah ke Admin'],
       ];
     }
@@ -1014,7 +1091,7 @@
       return '';
     }
     const rejected = state.user.approval_status === 'rejected';
-    const approver = state.user.role === 'coach' ? 'Admin FitSpace' : 'Coach / Pelatih FitSpace';
+    const approver = 'Admin FitSpace';
     return `
       <div class="approval-banner${rejected ? ' is-rejected' : ''}">
         <div>
@@ -1055,7 +1132,7 @@
     const hasWarmCache =
       (role === 'member' && Boolean(state.apiCache.member_dash)) ||
       (role === 'guardian' && (tab === 'bookings' || tab === 'memberships' ? Boolean(state.apiCache.member_dash) : Boolean(state.apiCache.guardian_dash))) ||
-      (role === 'coach' && (tab === 'materials' || (tab === 'approvals' ? Boolean(state.apiCache.coach_approvals) : Boolean(state.apiCache.coach_dash)))) ||
+      (role === 'coach' && (tab === 'materials' || Boolean(state.apiCache.coach_dash))) ||
       (role === 'admin' && (tab === 'reports' || tab === 'classes' || Boolean(state.apiCache[`admin_${tab}`])));
 
     if (!hasWarmCache || opts.showLoader) {
@@ -1197,14 +1274,14 @@
             <div class="kpi-delta">Okupansi rata-rata ${esc(dash.stats.occupancy_rate)}%</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Coach Menunggu Persetujuan</div>
-            <div class="kpi-value">${esc(dash.stats.pending_coaches || 0)}</div>
-            <div class="kpi-delta">${esc(dash.stats.active_coaches)} Coach aktif terverifikasi</div>
+            <div class="kpi-label">Antrean Persetujuan Admin</div>
+            <div class="kpi-value">${esc((dash.stats.pending_coaches || 0) + (dash.stats.pending_participants || 0) + (dash.stats.pending_bookings || 0) + (dash.stats.pending_memberships || 0))}</div>
+            <div class="kpi-delta">${esc(dash.stats.pending_bookings || 0)} kelas · ${esc(dash.stats.pending_memberships || 0)} membership · ${esc((dash.stats.pending_coaches || 0) + (dash.stats.pending_participants || 0))} akun</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Sinkronisasi Jadwal &amp; Masalah</div>
-            <div class="kpi-value">${esc(dash.stats.pending_availabilities || 0)} / ${esc(dash.stats.open_issues || 0)}</div>
-            <div class="kpi-delta">Ajuan jadwal · Tiket masalah terbuka</div>
+            <div class="kpi-label">Reschedule Coach &amp; Masalah</div>
+            <div class="kpi-value">${esc(dash.stats.pending_coach_reschedules || 0)} / ${esc(dash.stats.open_issues || 0)}</div>
+            <div class="kpi-delta">Ajuan pindah jadwal Coach · Tiket terbuka</div>
           </div>
         </div>
         <div class="panel-grid-2">
@@ -1214,21 +1291,25 @@
             <p>Aturan Bisnis #14: Transaksi pending &amp; gagal tidak dihitung sebagai pemasukan; refund dikurangkan otomatis.</p>
           </article>
           <article class="card">
-            <h3>Transaksi Pembayaran Terbaru</h3>
-            <div class="table-wrap">
-              <table class="data-table">
-                <thead><tr><th>Order</th><th>Pengguna</th><th>Nominal</th><th>Status</th></tr></thead>
-                <tbody>
-                  ${(dash.recent_payments || [])
-                    .map(
-                      (p) => `<tr><td>${esc(p.order_id)}</td><td>${esc(p.user_name)}</td><td>${esc(formatRp(p.amount))}</td><td><span class="pill ${p.status === 'paid' ? 'pill-success' : p.status === 'refunded' ? 'pill-danger' : 'pill-warning'}">${esc(p.status)}</span></td></tr>`
-                    )
-                    .join('')}
-                </tbody>
-              </table>
-            </div>
+            <h3>Distribusi Kelas &amp; Okupansi Studio (Grafik Lingkaran)</h3>
+            ${makeDonutChartSvg(dash.category_breakdown || [], `${dash.stats.occupancy_rate || 0}%`, 'Okupansi')}
           </article>
-        </div>`;
+        </div>
+        <article class="card">
+          <h3>Transaksi Pembayaran Terbaru</h3>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Order</th><th>Pengguna</th><th>Nominal</th><th>Status</th></tr></thead>
+              <tbody>
+                ${(dash.recent_payments || [])
+                  .map(
+                    (p) => `<tr><td>${esc(p.order_id)}</td><td>${esc(p.user_name)}</td><td>${esc(formatRp(p.amount))}</td><td><span class="pill ${p.status === 'paid' ? 'pill-success' : p.status === 'refunded' ? 'pill-danger' : 'pill-warning'}">${esc(p.status)}</span></td></tr>`
+                  )
+                  .join('')}
+              </tbody>
+            </table>
+          </div>
+        </article>`;
       return;
     }
 
@@ -1236,10 +1317,77 @@
       const appData = await apiCached('admin_approvals', '/admin/approvals', { force: opts.force });
       const coaches = appData.coaches || [];
       const participants = appData.participants || [];
+      const pendingBookings = appData.pending_bookings || [];
+      const pendingMemberships = appData.pending_memberships || [];
       main.innerHTML = `
         <article class="card">
-          <h3>Persetujuan Akun Coach / Pelatih (Khusus Otoritas Admin)</h3>
-          <p>Hanya Admin yang dapat menyetujui atau menolak akun Coach sebelum pelatih diizinkan login dan mengajar.</p>
+          <h3>1. Persetujuan Pemilihan Kelas Member &amp; Orang Tua (${pendingBookings.length})</h3>
+          <p>Seluruh pengajuan pemilihan kelas Member (18+) &amp; Orang Tua disetujui oleh Admin agar status booking &amp; tiket QR Code langsung aktif di akun peserta.</p>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Kode Booking</th><th>Peserta &amp; Peran</th><th>Kelas &amp; Jadwal</th><th>Nominal</th><th>Aksi Admin</th></tr></thead>
+              <tbody>
+                ${pendingBookings.length ? pendingBookings.map((b) => `
+                  <tr>
+                    <td><code>${esc(b.booking_code)}</code></td>
+                    <td><strong>${esc(b.child_name || b.user_name)}</strong><br/><small>${b.user_role === 'guardian' ? `Wali: ${esc(b.user_name)}` : 'Member 18+'}</small></td>
+                    <td>${esc(b.class_name)}<br/><small>${esc(formatDateTime(b.starts_at))}</small></td>
+                    <td>${esc(formatRp(b.final_amount))}</td>
+                    <td><button type="button" class="btn btn-success btn-sm" data-action="admin-approve-booking" data-id="${esc(b.id)}">Setujui Kelas &amp; Terbitkan QR</button></td>
+                  </tr>`).join('') : '<tr><td colspan="5">Semua pemilihan kelas sudah disetujui &amp; terkonfirmasi.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </article>
+        <article class="card">
+          <h3>2. Persetujuan Pemilihan Paket Membership (${pendingMemberships.length})</h3>
+          <p>Setujui pengajuan paket membership Member &amp; Orang Tua agar kuota sesi dan masa berlaku langsung aktif di dashboard peserta.</p>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Pengguna &amp; Peran</th><th>Paket Membership</th><th>Kuota &amp; Harga</th><th>Status</th><th>Aksi Admin</th></tr></thead>
+              <tbody>
+                ${pendingMemberships.length ? pendingMemberships.map((m) => `
+                  <tr>
+                    <td><strong>${esc(m.user_name)}</strong><br/><small>${esc(m.user_email)} · ${m.user_role === 'guardian' ? 'ORANG TUA' : 'MEMBER 18+'}</small></td>
+                    <td><strong>${esc(m.plan_name)}</strong><br/><small>${esc(m.duration_days)} hari</small></td>
+                    <td>${esc(m.total_quota)} Sesi · ${esc(formatRp(m.price))}</td>
+                    <td><span class="pill pill-warning">${esc(m.status)}</span></td>
+                    <td><button type="button" class="btn btn-success btn-sm" data-action="admin-approve-membership" data-id="${esc(m.id)}">Setujui &amp; Aktifkan</button></td>
+                  </tr>`).join('') : '<tr><td colspan="5">Tidak ada pengajuan paket membership yang menunggu ACC.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </article>
+        <article class="card">
+          <h3>3. Persetujuan Akun Member (18+) &amp; Orang Tua / Wali</h3>
+          <p>Admin menyetujui akun Member (18+) dan Orang Tua / Wali secara terpusat sebelum peserta dapat mengajukan pemilihan kelas dan membership.</p>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Pengguna</th><th>Peran, Usia &amp; Anak</th><th>Status</th><th>Keputusan Admin</th></tr></thead>
+              <tbody>
+                ${participants.map((p) => `
+                  <tr>
+                    <td><strong>${esc(p.name)}</strong><br/><small>${esc(p.email)} · ${esc(p.phone || '-')}</small></td>
+                    <td>
+                      <span class="pill ${p.role === 'guardian' ? 'pill-success' : 'pill-info'}">${esc(p.role === 'guardian' ? 'ORANG TUA / WALI' : 'MEMBER 18+')}</span>
+                      ${p.age ? `<small>(${esc(p.age)} thn)</small>` : ''}
+                      ${(p.children || []).length ? `<br/><small>Anak: ${esc(p.children.map((ch) => `${ch.full_name} (${ch.age} thn)`).join(', '))}</small>` : ''}
+                    </td>
+                    <td><span class="pill ${p.approval_status === 'approved' ? 'pill-success' : p.approval_status === 'rejected' ? 'pill-danger' : 'pill-warning'}">${esc(p.approval_status)}</span></td>
+                    <td>
+                      <div class="format-group">
+                        ${p.approval_status !== 'approved' ? `<button type="button" class="btn btn-success btn-sm" data-action="admin-decide-user" data-id="${esc(p.id)}" data-decision="approved">Setujui Akun</button>` : ''}
+                        ${p.approval_status !== 'rejected' ? `<button type="button" class="btn btn-outline btn-sm" data-action="admin-decide-user" data-id="${esc(p.id)}" data-decision="rejected">Tolak</button>` : ''}
+                      </div>
+                    </td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </article>
+        <article class="card">
+          <h3>4. Persetujuan Akun Coach / Pelatih</h3>
+          <p>Hanya Admin yang dapat menyetujui atau menolak akun Coach sebelum pelatih diizinkan login dan menerima jadwal mengajar resmi.</p>
           <div class="table-wrap">
             <table class="data-table">
               <thead><tr><th>Nama Coach &amp; Email</th><th>Sertifikasi &amp; Spesialisasi</th><th>Status</th><th>Aksi Admin</th></tr></thead>
@@ -1253,29 +1401,6 @@
                       <div class="format-group">
                         ${c.approval_status !== 'approved' ? `<button type="button" class="btn btn-success btn-sm" data-action="admin-decide-coach" data-id="${esc(c.id)}" data-decision="approved">Setujui Coach</button>` : ''}
                         ${c.approval_status !== 'rejected' ? `<button type="button" class="btn btn-danger btn-sm" data-action="admin-decide-coach" data-id="${esc(c.id)}" data-decision="rejected">Tolak</button>` : ''}
-                      </div>
-                    </td>
-                  </tr>`).join('')}
-              </tbody>
-            </table>
-          </div>
-        </article>
-        <article class="card">
-          <h3>Pengawasan Akun Member (18+) &amp; Orang Tua / Wali (Intervensi Masalah)</h3>
-          <p>Normalnya akun Member &amp; Orang Tua disetujui oleh Coach. Admin dapat melakukan override di sini jika terjadi kendala verifikasi.</p>
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead><tr><th>Pengguna</th><th>Peran &amp; Usia</th><th>Status</th><th>Aksi Override Admin</th></tr></thead>
-              <tbody>
-                ${participants.map((p) => `
-                  <tr>
-                    <td><strong>${esc(p.name)}</strong><br/><small>${esc(p.email)}</small></td>
-                    <td><span class="pill pill-info">${esc(p.role === 'guardian' ? 'ORANG TUA' : 'MEMBER 18+')}</span> ${p.age ? `<small>(${esc(p.age)} thn)</small>` : ''}</td>
-                    <td><span class="pill ${p.approval_status === 'approved' ? 'pill-success' : p.approval_status === 'rejected' ? 'pill-danger' : 'pill-warning'}">${esc(p.approval_status)}</span></td>
-                    <td>
-                      <div class="format-group">
-                        ${p.approval_status !== 'approved' ? `<button type="button" class="btn btn-success btn-sm" data-action="admin-decide-user" data-id="${esc(p.id)}" data-decision="approved">Setujui</button>` : ''}
-                        ${p.approval_status !== 'rejected' ? `<button type="button" class="btn btn-outline btn-sm" data-action="admin-decide-user" data-id="${esc(p.id)}" data-decision="rejected">Tolak</button>` : ''}
                       </div>
                     </td>
                   </tr>`).join('')}
@@ -1353,10 +1478,41 @@
         apiCached('admin_schedules', '/admin/schedule-sync', { force: opts.force }),
       ]);
       const avails = syncData.availabilities || [];
+      const reschedules = syncData.schedule_reschedules || [];
       const dayNames = ['', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
       main.innerHTML = `
         <article class="card">
-          <h3>Sinkronisasi Ajuan Ketersediaan Coach ↔ Jadwal Member</h3>
+          <h3>Pengajuan Reschedule Jadwal Coach (ACC → Otomatis Diteruskan ke Member &amp; Orang Tua)</h3>
+          <p>Saat Coach berhalangan mengajar, ajuan perubahan waktu masuk ke sini. Begitu Admin klik <strong>Setujui &amp; Teruskan</strong>, jadwal diperbarui tanpa bentrok dan notifikasi langsung dikirim ke seluruh Member &amp; Orang Tua terdaftar.</p>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Coach &amp; Kelas</th><th>Perubahan Jadwal</th><th>Alasan Coach</th><th>Status</th><th>Keputusan Admin</th></tr></thead>
+              <tbody>
+                ${reschedules.length ? reschedules.map((r) => `
+                  <tr>
+                    <td><strong>${esc(r.coach_name)}</strong><br/><small>${esc(r.class_name)} · ${esc(r.room_name)} (${esc(r.booked_count || 0)} peserta)</small></td>
+                    <td>
+                      <div class="reschedule-diff">
+                        <span class="reschedule-old">${esc(formatDateTime(r.original_starts_at))}</span>
+                        <span class="reschedule-new">&rarr; ${esc(formatDateTime(r.proposed_starts_at))}</span>
+                      </div>
+                    </td>
+                    <td>${esc(r.reason)}</td>
+                    <td><span class="pill ${r.status === 'approved' ? 'pill-success' : r.status === 'rejected' ? 'pill-danger' : 'pill-warning'}">${r.status === 'approved' ? `ACC (${esc(r.affected_participants_count || 0)} peserta)` : esc(r.status)}</span></td>
+                    <td>
+                      ${r.status === 'pending' ? `
+                        <div class="format-group">
+                          <button type="button" class="btn btn-success btn-sm" data-action="admin-decide-reschedule" data-id="${esc(r.id)}" data-decision="approved">Setujui &amp; Teruskan</button>
+                          <button type="button" class="btn btn-danger btn-sm" data-action="admin-decide-reschedule" data-id="${esc(r.id)}" data-decision="rejected">Tolak</button>
+                        </div>` : `<small>${esc(r.reviewed_by_name || 'Admin')}</small>`}
+                    </td>
+                  </tr>`).join('') : '<tr><td colspan="5">Belum ada pengajuan reschedule jadwal dari Coach.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </article>
+        <article class="card">
+          <h3>Sinkronisasi Ajuan Ketersediaan Rutin Coach ↔ Jadwal Studio</h3>
           <p>Setujui usulan jam mengajar dari Coach agar jadwal antara pelatih dan peserta selalu sinkron tanpa bentrok ruangan.</p>
           <div class="table-wrap">
             <table class="data-table">
@@ -1499,7 +1655,7 @@
       </article>`;
   }
 
-  // --- COACH WORKSPACE (Zero redundant API calls + Account & Booking Confirmation!) ---
+  // --- COACH WORKSPACE (Receives Official Admin Schedules + Requests Reschedule via Admin!) ---
   async function renderCoachWorkspace(tab, main, opts = {}) {
     if (tab === 'issues') {
       await renderUserIssuesTab(main);
@@ -1522,94 +1678,61 @@
       return;
     }
 
-    if (tab === 'approvals') {
-      const accRes = await apiCached('coach_approvals', '/coach/pending-accounts', { force: opts.force });
-      const accounts = accRes.accounts || [];
-      const pendingBookings = accRes.pending_bookings || [];
-      main.innerHTML = `
-        <article class="card">
-          <h3>Persetujuan Akun Member (18+) &amp; Orang Tua / Wali</h3>
-          <p>Setelah Coach menyetujui akun, status Member &amp; Orang Tua langsung aktif secara otomatis untuk booking kelas, membership &amp; QR absensi.</p>
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead><tr><th>Nama &amp; Email</th><th>Peran &amp; Usia / Anak</th><th>Status</th><th>Keputusan Coach</th></tr></thead>
-              <tbody>
-                ${accounts.map((a) => `
-                  <tr>
-                    <td><strong>${esc(a.name)}</strong><br/><small>${esc(a.email)} · ${esc(a.phone || '-')}</small></td>
-                    <td>
-                      <span class="pill ${a.role === 'guardian' ? 'pill-success' : 'pill-info'}">${a.role === 'guardian' ? 'ORANG TUA / WALI' : 'MEMBER 18+'}</span>
-                      ${a.age ? `<small>Usia ${esc(a.age)} thn</small>` : ''}
-                      ${(a.children || []).length ? `<br/><small>Anak: ${esc(a.children.map((ch) => `${ch.full_name} (${ch.age} thn)`).join(', '))}</small>` : ''}
-                    </td>
-                    <td><span class="pill ${a.approval_status === 'approved' ? 'pill-success' : a.approval_status === 'rejected' ? 'pill-danger' : 'pill-warning'}">${esc(a.approval_status)}</span></td>
-                    <td>
-                      <div class="format-group">
-                        ${a.approval_status !== 'approved' ? `<button type="button" class="btn btn-success btn-sm" data-action="coach-decide-account" data-id="${esc(a.id)}" data-decision="approved">Setujui Akun</button>` : ''}
-                        ${a.approval_status !== 'rejected' ? `<button type="button" class="btn btn-danger btn-sm" data-action="coach-decide-account" data-id="${esc(a.id)}" data-decision="rejected">Tolak</button>` : ''}
-                      </div>
-                    </td>
-                  </tr>`).join('')}
-              </tbody>
-            </table>
-          </div>
-        </article>
-        <article class="card">
-          <h3>Konfirmasi Booking Kelas Menunggu (${pendingBookings.length})</h3>
-          <p>Booking yang masih berstatus <code>pending_payment</code> dapat langsung disetujui Coach agar kelas &amp; QR Code langsung terdaftar di akun Member / Orang Tua.</p>
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead><tr><th>Kode</th><th>Peserta</th><th>Kelas &amp; Jadwal</th><th>Nominal</th><th>Aksi Coach</th></tr></thead>
-              <tbody>
-                ${pendingBookings.length ? pendingBookings.map((b) => `
-                  <tr>
-                    <td>${esc(b.booking_code)}</td>
-                    <td><strong>${esc(b.child_name || b.user_name)}</strong><br/><small>${b.user_role === 'guardian' ? `Wali: ${esc(b.user_name)}` : 'Member 18+'}</small></td>
-                    <td>${esc(b.class_name)}<br/><small>${esc(formatDateTime(b.starts_at))}</small></td>
-                    <td>${esc(formatRp(b.final_amount))}</td>
-                    <td><button type="button" class="btn btn-success btn-sm" data-action="coach-confirm-booking" data-id="${esc(b.id)}">Setujui &amp; Terbitkan QR</button></td>
-                  </tr>`).join('') : '<tr><td colspan="5">Semua booking kelas sudah terkonfirmasi otomatis.</td></tr>'}
-              </tbody>
-            </table>
-          </div>
-        </article>`;
-      return;
-    }
-
     const data = await apiCached('coach_dash', '/coach/dashboard', { force: opts.force });
     state.workspaceData.coach = data;
 
     if (tab === 'overview') {
       const scheds = data.schedules || [];
-      const pendingCnt = Number(data.coach?.pending_accounts_count || 0);
+      const att = data.attendance_stats || { total: 0, present: 0, rate: 100 };
+      const pendResch = Number(data.coach?.pending_reschedules_count || 0);
       main.innerHTML = `
-        ${pendingCnt > 0 ? `
+        ${pendResch > 0 ? `
           <div class="approval-banner">
             <div>
-              <strong>${esc(pendingCnt)} Akun Member (18+) / Orang Tua Menunggu Persetujuan Anda</strong>
-              <div>Tinjau dan setujui akun peserta baru agar mereka dapat mulai booking kelas &amp; memilih membership.</div>
+              <strong>${esc(pendResch)} Pengajuan Reschedule Jadwal Menunggu Persetujuan Admin</strong>
+              <div>Jika disetujui Admin, perubahan jadwal otomatis diteruskan ke seluruh Member &amp; Orang Tua terkait.</div>
             </div>
-            <button type="button" class="btn btn-primary btn-sm" data-action="ws-tab" data-tab="approvals">Tinjau Persetujuan</button>
+            <button type="button" class="btn btn-primary btn-sm" data-action="ws-tab" data-tab="reschedule">Pantau Status Reschedule</button>
           </div>` : ''}
-        <article class="card card-dark">
-          <span class="pill pill-info">SINGLE-USE HMAC QR VALIDATOR</span>
-          <h3>Pemindai / Validasi QR Code Kehadiran Peserta</h3>
-          <form id="coach-qr-form" class="form-grid">
-            <div class="field"><label for="qr-token-input" class="label-on-dark">Token / Kode QR Booking</label><input id="qr-token-input" name="qr_token" required placeholder="Tempel token QR atau kode FS-..." /></div>
-            <div class="field">
-              <label for="qr-status-input" class="label-on-dark">Status Kehadiran</label>
-              <select id="qr-status-input" name="status"><option value="present">Present (Hadir)</option><option value="late">Late (Terlambat)</option><option value="excused">Excused (Izin)</option></select>
+        <div class="panel-grid-2">
+          <article class="card card-dark">
+            <span class="pill pill-info">SINGLE-USE HMAC QR VALIDATOR</span>
+            <h3>Pemindai / Validasi QR Code Kehadiran Peserta</h3>
+            <form id="coach-qr-form" class="form-grid">
+              <div class="field"><label for="qr-token-input" class="label-on-dark">Token / Kode QR Booking</label><input id="qr-token-input" name="qr_token" required placeholder="Tempel token QR atau kode FS-..." /></div>
+              <div class="field">
+                <label for="qr-status-input" class="label-on-dark">Status Kehadiran</label>
+                <select id="qr-status-input" name="status"><option value="present">Present (Hadir)</option><option value="late">Late (Terlambat)</option><option value="excused">Excused (Izin)</option></select>
+              </div>
+              <div class="field"><label>&nbsp;</label><button type="submit" class="btn btn-primary">Validasi QR Sekali Pakai</button></div>
+            </form>
+          </article>
+          <article class="card">
+            <h3>Tingkat Kehadiran Studio (QR Tervalidasi)</h3>
+            <div class="ring-metric-row">
+              ${makeRingChartSvg(att.rate, 'Hadir QR')}
+              <div>
+                <strong>${esc(att.present)} dari ${esc(att.total)} sesi tervalidasi hadir</strong>
+                <p>Jadwal resmi ditetapkan oleh Admin. Jika berhalangan mengajar, ajukan reschedule agar Admin dapat menyetujui &amp; meneruskan info ke peserta.</p>
+                <button type="button" class="btn btn-outline btn-sm" data-action="ws-tab" data-tab="reschedule">Ajukan Reschedule Jadwal</button>
+              </div>
             </div>
-            <div class="field"><label>&nbsp;</label><button type="submit" class="btn btn-primary">Validasi QR Sekali Pakai</button></div>
-          </form>
-        </article>
+          </article>
+        </div>
         <article class="card">
-          <h3>Jadwal Mengajar Coach (${esc(data.coach.name)})</h3>
+          <h3>Jadwal Mengajar Resmi Coach (${esc(data.coach.name)})</h3>
           <div class="table-wrap">
             <table class="data-table">
-              <thead><tr><th>Waktu</th><th>Kelas</th><th>Ruangan</th><th>Peserta</th></tr></thead>
+              <thead><tr><th>Waktu</th><th>Kelas</th><th>Ruangan</th><th>Peserta</th><th>Aksi</th></tr></thead>
               <tbody>
-                ${scheds.map((s) => `<tr><td>${esc(formatDateTime(s.starts_at))}</td><td>${esc(s.class_name)}</td><td>${esc(s.room_name)}</td><td>${esc(s.booked_count)}/${esc(s.capacity)}</td></tr>`).join('')}
+                ${scheds.map((s) => `
+                  <tr>
+                    <td>${esc(formatDateTime(s.starts_at))}</td>
+                    <td><strong>${esc(s.class_name)}</strong></td>
+                    <td>${esc(s.room_name)} (${esc(s.branch_name)})</td>
+                    <td>${esc(s.booked_count)}/${esc(s.capacity)}</td>
+                    <td><button type="button" class="btn btn-outline btn-sm" data-action="coach-quick-reschedule" data-id="${esc(s.id)}">Ajukan Reschedule</button></td>
+                  </tr>`).join('')}
               </tbody>
             </table>
           </div>
@@ -1693,34 +1816,69 @@
       return;
     }
 
+    const scheds = data.schedules || [];
+    const reschedules = data.schedule_reschedules || [];
     const avails = data.availabilities || [];
+    const defaultDt = new Date(Date.now() + 72 * 3600 * 1000).toISOString().slice(0, 16);
     main.innerHTML = `
       <article class="card">
-        <h3>Ajukan Sinkronisasi Ketersediaan Jadwal ke Admin</h3>
-        <p>Usulan jam mengajar dikirim ke Admin untuk disinkronkan bersama jadwal kelas Member dan ruangan studio.</p>
+        <h3>Ajukan Reschedule Jadwal Mengajar ke Admin</h3>
+        <p>Jika Anda berhalangan mengajar pada jadwal yang ditetapkan, ajukan waktu pengganti melalui form ini. Setelah <strong>disetujui (ACC) oleh Admin</strong>, perubahan jadwal akan otomatis diteruskan ke seluruh Member &amp; Orang Tua yang terdaftar.</p>
+        ${scheds.length ? `
+          <form id="coach-reschedule-form" class="form-grid">
+            <div class="field">
+              <label for="cr-sched">Pilih Jadwal Mengajar</label>
+              <select id="cr-sched" name="schedule_id" required>
+                ${scheds.map((s) => `<option value="${esc(s.id)}">${esc(s.class_name)} — ${esc(formatDateTime(s.starts_at))} (${esc(s.booked_count)} peserta)</option>`).join('')}
+              </select>
+            </div>
+            <div class="field">
+              <label for="cr-start">Usulan Waktu Pengganti</label>
+              <input id="cr-start" name="proposed_starts_at" type="datetime-local" value="${esc(defaultDt)}" required />
+            </div>
+            <div class="field">
+              <label for="cr-reason">Alasan Perubahan Jadwal</label>
+              <input id="cr-reason" name="reason" required placeholder="Contoh: Berhalangan hadir karena seminar sertifikasi pelatih" />
+            </div>
+            <div class="field"><label>&nbsp;</label><button type="submit" class="btn btn-primary">Kirim Ajuan Reschedule ke Admin</button></div>
+          </form>` : '<p>Belum ada jadwal mengajar aktif untuk diajukan reschedule.</p>'}
+      </article>
+      <article class="card">
+        <h3>Riwayat Pengajuan Reschedule Jadwal (${reschedules.length})</h3>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Kelas &amp; Ruangan</th><th>Jadwal Asal &rarr; Usulan</th><th>Alasan</th><th>Status ACC Admin</th></tr></thead>
+            <tbody>
+              ${reschedules.length ? reschedules.map((r) => `
+                <tr>
+                  <td><strong>${esc(r.class_name)}</strong><br/><small>${esc(r.room_name)}</small></td>
+                  <td>
+                    <div class="reschedule-diff">
+                      <span class="reschedule-old">${esc(formatDateTime(r.original_starts_at))}</span>
+                      <span class="reschedule-new">&rarr; ${esc(formatDateTime(r.proposed_starts_at))}</span>
+                    </div>
+                  </td>
+                  <td>${esc(r.reason)}</td>
+                  <td><span class="pill ${r.status === 'approved' ? 'pill-success' : r.status === 'rejected' ? 'pill-danger' : 'pill-warning'}">${r.status === 'approved' ? `ACC · Diteruskan ke ${esc(r.affected_participants_count || 0)} Peserta` : r.status === 'rejected' ? 'DITOLAK ADMIN' : 'MENUNGGU ACC ADMIN'}</span></td>
+                </tr>`).join('') : '<tr><td colspan="4">Belum ada pengajuan reschedule jadwal.</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </article>
+      <article class="card">
+        <h3>Ajukan Ketersediaan Jam Mengajar Rutin ke Admin (${avails.length})</h3>
         <form id="coach-avail-form" class="form-grid">
           <div class="field"><label for="av-branch">Cabang</label><select id="av-branch" name="branch_id">${state.branches.map((b) => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('')}</select></div>
           <div class="field"><label for="av-day">Hari (1=Senin..7=Minggu)</label><input id="av-day" name="day_of_week" type="number" min="1" max="7" value="3" required /></div>
           <div class="field"><label for="av-start">Jam Mulai</label><input id="av-start" name="start_time" type="time" value="09:00" required /></div>
           <div class="field"><label for="av-end">Jam Selesai</label><input id="av-end" name="end_time" type="time" value="15:00" required /></div>
           <div class="field"><label for="av-note">Alasan / Catatan</label><input id="av-note" name="request_notes" required placeholder="Ketersediaan tambahan untuk kelas pagi" /></div>
-          <div class="field"><label>&nbsp;</label><button type="submit" class="btn btn-primary">Kirim Pengajuan ke Admin</button></div>
+          <div class="field"><label>&nbsp;</label><button type="submit" class="btn btn-dark">Kirim Ketersediaan Rutin</button></div>
         </form>
-      </article>
-      <article class="card">
-        <h3>Riwayat Pengajuan Sinkronisasi Jadwal (${avails.length})</h3>
-        <div class="table-wrap">
-          <table class="data-table">
-            <thead><tr><th>Cabang</th><th>Hari &amp; Jam</th><th>Catatan</th><th>Status Admin</th></tr></thead>
-            <tbody>
-              ${avails.length ? avails.map((a) => `<tr><td>${esc(a.branch_name)}</td><td>Hari #${esc(a.day_of_week)} · ${esc(a.start_time)}–${esc(a.end_time)}</td><td>${esc(a.request_notes)}</td><td><span class="pill ${a.status === 'approved' ? 'pill-success' : a.status === 'rejected' ? 'pill-danger' : 'pill-warning'}">${esc(a.status)}</span></td></tr>`).join('') : '<tr><td colspan="4">Belum ada pengajuan.</td></tr>'}
-            </tbody>
-          </table>
-        </div>
       </article>`;
   }
 
-  // --- MEMBER WORKSPACE (Cached + Live Approval Sync + Instant Booking Visibility) ---
+  // --- MEMBER WORKSPACE (Cached + Live Admin Approval Sync + Circular Ring + Schedule Change Notifications) ---
   async function renderMemberWorkspace(tab, main, opts = {}) {
     if (tab === 'issues') {
       await renderUserIssuesTab(main);
@@ -1729,7 +1887,7 @@
 
     const data = await apiCached('member_dash', '/member/dashboard', { force: opts.force });
     state.workspaceData.member = data;
-    // Live-sync approval_status so newly Coach-approved Member/Orang Tua immediately unlocks!
+    // Live-sync approval_status so newly Admin-approved Member/Orang Tua immediately unlocks!
     if (data.approval_status && state.user) {
       state.user.approval_status = data.approval_status;
       state.user.approval_notes = data.approval_notes ?? state.user.approval_notes;
@@ -1737,20 +1895,28 @@
       syncPendingApprovalWatcher();
     }
     const mem = data.active_membership;
+    const pendingMems = data.pending_memberships || [];
     const bookings = data.bookings || [];
+    const notifications = data.notifications || [];
 
     if (tab === 'overview') {
       const nextB = bookings.find((b) => b.status === 'confirmed');
       const pct = mem ? Math.round((mem.remaining_quota / Math.max(1, mem.total_quota)) * 100) : 0;
       main.innerHTML = `
         ${renderApprovalBanner()}
+        ${renderScheduleChangeNotifications(notifications)}
         <div class="panel-grid-2">
           <article class="card card-dark">
             <span class="pill pill-success">${mem ? 'MEMBERSHIP ACTIVE' : 'BELUM ADA MEMBERSHIP'}</span>
             <h3>${mem ? esc(mem.plan_name) : 'Aktifkan Membership'}</h3>
-            <div class="price-tag">${mem ? `Sisa ${esc(mem.remaining_quota)} / ${esc(mem.total_quota)} Sesi` : 'Booking Per Sesi'}</div>
+            <div class="ring-metric-row">
+              ${makeRingChartSvg(pct, 'Sisa Kuota', true)}
+              <div>
+                <div class="price-tag">${mem ? `Sisa ${esc(mem.remaining_quota)} / ${esc(mem.total_quota)} Sesi` : 'Booking Per Sesi'}</div>
+                <p>${mem ? `Berlaku hingga ${esc(formatDateTime(mem.expires_at))}` : 'Pilih paket bulanan atau paket 10 sesi untuk diajukan & diaktifkan oleh Admin.'}</p>
+              </div>
+            </div>
             <progress class="fit-progress is-high" value="${pct}" max="100" aria-label="Sisa kuota membership ${pct}%"></progress>
-            <p>${mem ? `Berlaku hingga ${esc(formatDateTime(mem.expires_at))}` : 'Beli paket bulanan atau paket 10 sesi untuk hemat lebih banyak.'}</p>
           </article>
           <article class="card">
             <h3>Tiket QR Code Kehadiran (Sekali Pakai)</h3>
@@ -1762,7 +1928,7 @@
                   <h4>${esc(nextB.class_name)}</h4>
                   <p>${esc(formatDateTime(nextB.starts_at))}<br/>Kode QR: <strong>${esc(nextB.qr_code)}</strong></p>
                 </div>
-              </div>` : '<p>Belum ada booking terkonfirmasi. Klik Portal Publik untuk memesan kelas.</p>'}
+              </div>` : '<p>Belum ada booking terkonfirmasi. Klik Katalog Kelas untuk memilih kelas & menunggu ACC Admin.</p>'}
           </article>
         </div>`;
       return;
@@ -1771,10 +1937,11 @@
     if (tab === 'bookings') {
       main.innerHTML = `
         ${renderApprovalBanner()}
+        ${renderScheduleChangeNotifications(notifications)}
         <article class="card">
           <div class="section-head">
             <h3>Daftar Booking (${bookings.length}), Reschedule (Maks H-8 Jam) &amp; Pembatalan</h3>
-            <button type="button" class="btn btn-primary btn-sm" data-action="go-portal-section" data-target="#katalog-kelas">+ Booking Kelas Baru</button>
+            <button type="button" class="btn btn-primary btn-sm" data-action="go-portal-section" data-target="#katalog-kelas">+ Pilih &amp; Booking Kelas Baru</button>
           </div>
           <div class="table-wrap">
             <table class="data-table">
@@ -1786,7 +1953,7 @@
                     <tr>
                       <td>${esc(b.booking_code)}</td>
                       <td><strong>${esc(b.class_name)}</strong>${b.child_name ? ` <span class="pill pill-info">${esc(b.child_name)}</span>` : ''}<br/><small>${esc(formatDateTime(b.starts_at))}</small></td>
-                      <td><span class="pill ${b.status === 'confirmed' || b.status === 'attended' ? 'pill-success' : b.status === 'cancelled' ? 'pill-danger' : 'pill-warning'}">${esc(b.status)}</span></td>
+                      <td><span class="pill ${b.status === 'confirmed' || b.status === 'attended' ? 'pill-success' : b.status === 'cancelled' ? 'pill-danger' : 'pill-warning'}">${b.status === 'pending_payment' ? 'MENUNGGU ACC ADMIN' : esc(b.status)}</span></td>
                       <td><code>${esc(b.qr_code || '-')}</code></td>
                       <td>
                         ${b.status === 'confirmed' ? `
@@ -1795,7 +1962,7 @@
                       </td>
                     </tr>`
                   )
-                  .join('') : '<tr><td colspan="5">Belum ada kelas terdaftar. Klik <strong>+ Booking Kelas Baru</strong> atau menu <strong>Katalog Kelas</strong> di atas untuk langsung mendaftar.</td></tr>'}
+                  .join('') : '<tr><td colspan="5">Belum ada kelas terdaftar. Klik <strong>+ Pilih &amp; Booking Kelas Baru</strong> atau menu <strong>Katalog Kelas</strong> di atas untuk langsung mendaftar.</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -1807,6 +1974,14 @@
       const payments = data.payments || [];
       main.innerHTML = `
         ${renderApprovalBanner()}
+        ${pendingMems.length ? `
+          <div class="approval-banner">
+            <div>
+              <strong>${pendingMems.length} Pengajuan Paket Membership Menunggu Persetujuan Admin</strong>
+              <div>${esc(pendingMems.map((pm) => `${pm.plan_name} (${formatRp(pm.price)})`).join(' · '))}. Setelah disetujui Admin, kuota sesi langsung aktif otomatis.</div>
+            </div>
+            <span class="pill pill-warning">MENUNGGU ACC ADMIN</span>
+          </div>` : ''}
         <article class="card">
           <div class="section-head">
             <h3>Membership Aktif &amp; Riwayat Transaksi (${payments.length})</h3>
@@ -1817,7 +1992,7 @@
             <table class="data-table">
               <thead><tr><th>Order ID</th><th>Gateway</th><th>Nominal</th><th>Status</th></tr></thead>
               <tbody>
-                ${payments.length ? payments.map((p) => `<tr><td>${esc(p.order_id)}</td><td>${esc(p.gateway)}</td><td>${esc(formatRp(p.amount))}</td><td><span class="pill ${p.status === 'paid' ? 'pill-success' : 'pill-warning'}">${esc(p.status)}</span></td></tr>`).join('') : '<tr><td colspan="4">Belum ada transaksi membership atau kelas. Klik <strong>Pilih Paket Membership</strong> di atas untuk memulai.</td></tr>'}
+                ${payments.length ? payments.map((p) => `<tr><td>${esc(p.order_id)}</td><td>${esc(p.gateway)}</td><td>${esc(formatRp(p.amount))}</td><td><span class="pill ${p.status === 'paid' ? 'pill-success' : 'pill-warning'}">${p.status === 'pending' ? 'MENUNGGU ACC ADMIN' : esc(p.status)}</span></td></tr>`).join('') : '<tr><td colspan="4">Belum ada transaksi membership atau kelas. Klik <strong>Pilih Paket Membership</strong> di atas untuk memulai.</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -1892,6 +2067,7 @@
 
     const shieldHtml = `
       ${renderApprovalBanner()}
+      ${renderScheduleChangeNotifications(data.notifications || [])}
       <div class="shield-banner">
         <div>
           <strong>Pemantauan Profil &amp; Latihan Anak</strong>
@@ -2099,8 +2275,8 @@
     const action = target.dataset.action;
     const busyActions = new Set([
       'buy-membership', 'guest-login', 'admin-decide-coach', 'admin-decide-user',
-      'admin-decide-avail', 'coach-decide-account', 'coach-confirm-booking',
-      'coach-toggle-publish', 'cancel-booking', 'admin-refund',
+      'admin-decide-avail', 'admin-approve-booking', 'admin-approve-membership',
+      'admin-decide-reschedule', 'coach-toggle-publish', 'cancel-booking', 'admin-refund',
     ]);
     const markBusy = busyActions.has(action);
     if (markBusy) {
@@ -2139,7 +2315,7 @@
         }
         const res = await api('/memberships/purchase', {
           method: 'POST',
-          body: JSON.stringify({ plan_id: Number(target.dataset.id), gateway: 'midtrans', auto_confirm_demo: state.demoMode }),
+          body: JSON.stringify({ plan_id: Number(target.dataset.id), gateway: 'midtrans', auto_confirm_demo: false }),
         });
         clearApiCache();
         showToast(res.message || 'Paket membership berhasil diproses!');
@@ -2215,6 +2391,36 @@
         clearApiCache('admin_');
         showToast(res.message || 'Status sinkronisasi jadwal diperbarui.');
         await loadWorkspaceTab('schedules', { force: true });
+      } else if (action === 'admin-approve-booking') {
+        const res = await api(`/admin/bookings/${encodeURIComponent(target.dataset.id)}/approve`, {
+          method: 'POST',
+        });
+        clearApiCache();
+        showToast(res.message || 'Pemilihan kelas disetujui Admin & QR diterbitkan!');
+        loadPublicBootstrap().catch(() => {});
+        await loadWorkspaceTab('approvals', { force: true });
+      } else if (action === 'admin-approve-membership') {
+        const res = await api(`/admin/memberships/${encodeURIComponent(target.dataset.id)}/approve`, {
+          method: 'POST',
+        });
+        clearApiCache();
+        showToast(res.message || 'Paket membership disetujui & diaktifkan!');
+        await loadWorkspaceTab('approvals', { force: true });
+      } else if (action === 'admin-decide-reschedule') {
+        const res = await api(`/admin/schedule-reschedules/${encodeURIComponent(target.dataset.id)}/decision`, {
+          method: 'POST',
+          body: JSON.stringify({ decision: target.dataset.decision }),
+        });
+        clearApiCache();
+        showToast(res.message || 'Keputusan reschedule Coach disimpan & diteruskan ke peserta.');
+        loadPublicBootstrap().catch(() => {});
+        await loadWorkspaceTab('schedules', { force: true });
+      } else if (action === 'coach-quick-reschedule') {
+        const schedId = target.dataset.id;
+        await loadWorkspaceTab('reschedule', { force: true });
+        const sel = $('cr-sched');
+        if (sel && schedId) sel.value = schedId;
+        $('cr-start')?.focus();
       } else if (action === 'open-resolve-issue') {
         openModal(
           `Tangani Tiket ${target.dataset.code || ''}`,
@@ -2234,21 +2440,6 @@
             <div class="field"><button type="submit" class="btn btn-primary btn-block">Simpan Keputusan Admin</button></div>
           </form>`
         );
-      } else if (action === 'coach-decide-account') {
-        const res = await api(`/coach/accounts/${encodeURIComponent(target.dataset.id)}/decision`, {
-          method: 'POST',
-          body: JSON.stringify({ decision: target.dataset.decision }),
-        });
-        clearApiCache('coach_');
-        showToast(res.message || 'Status persetujuan akun diperbarui.');
-        await loadWorkspaceTab('approvals', { force: true });
-      } else if (action === 'coach-confirm-booking') {
-        const res = await api(`/coach/bookings/${encodeURIComponent(target.dataset.id)}/confirm`, {
-          method: 'POST',
-        });
-        clearApiCache('coach_');
-        showToast(res.message || 'Booking peserta berhasil dikonfirmasi & QR diterbitkan.');
-        await loadWorkspaceTab('approvals', { force: true });
       } else if (action === 'coach-toggle-publish') {
         const res = await api(`/coach/evaluations/${encodeURIComponent(target.dataset.id)}/publish`, {
           method: 'PATCH',
@@ -2393,7 +2584,7 @@
         }
         payload.schedule_id = Number(form.dataset.scheduleId);
         if (payload.child_id) payload.child_id = Number(payload.child_id);
-        payload.auto_confirm_demo = state.demoMode;
+        payload.auto_confirm_demo = false;
         const res = await api('/bookings', { method: 'POST', body: JSON.stringify(payload) });
         clearApiCache();
         closeModal();
@@ -2452,11 +2643,17 @@
         clearApiCache('coach_');
         showToast(res.message || 'Evaluasi perkembangan tersimpan!');
         await loadWorkspaceTab('evaluations', { force: true });
+      } else if (form.id === 'coach-reschedule-form') {
+        payload.schedule_id = Number(payload.schedule_id);
+        const res = await api('/coach/schedule-reschedules', { method: 'POST', body: JSON.stringify(payload) });
+        clearApiCache('coach_');
+        showToast(res.message || 'Ajuan reschedule jadwal dikirim ke Admin.');
+        await loadWorkspaceTab('reschedule', { force: true });
       } else if (form.id === 'coach-avail-form') {
         await api('/coach/availabilities', { method: 'POST', body: JSON.stringify(payload) });
         clearApiCache('coach_');
-        showToast('Pengajuan sinkronisasi jadwal dikirim ke Admin.');
-        await loadWorkspaceTab('availability', { force: true });
+        showToast('Pengajuan ketersediaan rutin dikirim ke Admin.');
+        await loadWorkspaceTab('reschedule', { force: true });
       } else if (form.id === 'guardian-child-form') {
         await api('/guardian/children', { method: 'POST', body: JSON.stringify(payload) });
         clearApiCache('guardian_');
@@ -2541,13 +2738,21 @@
     setView('portal');
   });
 
-  // Auto-sync approval status immediately when returning to tab (e.g. right after Coach approves Member/Orang Tua!)
+  // Auto-sync approval status & workspace data immediately when returning to tab (e.g. right after Admin ACC!)
   window.addEventListener('focus', () => {
     syncAuthStatus(false);
+    if (state.user && state.activeView === 'workspace') {
+      clearApiCache();
+      loadWorkspaceTab(state.activeTab, { force: true });
+    }
   });
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
       syncAuthStatus(false);
+      if (state.user && state.activeView === 'workspace') {
+        clearApiCache();
+        loadWorkspaceTab(state.activeTab, { force: true });
+      }
     }
   });
 

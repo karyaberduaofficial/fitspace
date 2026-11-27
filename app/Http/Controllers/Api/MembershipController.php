@@ -88,10 +88,23 @@ class MembershipController extends Controller
             'status' => $membership->status,
         ], $request);
 
+        if ($membership->status === 'pending_payment') {
+            $adminIds = DB::table('users')->where('role', 'admin')->where('is_active', true)->pluck('id');
+            foreach ($adminIds as $aid) {
+                $this->audit->notify(
+                    (int) $aid,
+                    'membership_pending_admin',
+                    'Pengajuan Pemilihan Membership Baru',
+                    "{$user->name} mengajukan paket {$plan->name}. Tinjau & setujui di panel Admin.",
+                    ['membership_id' => $membershipId]
+                );
+            }
+        }
+
         return response()->json([
             'message' => $membership->status === 'active'
                 ? "Paket {$plan->name} berhasil diaktifkan!"
-                : "Invoice pembelian {$plan->name} telah dibuat. Menunggu verifikasi pembayaran.",
+                : "Pengajuan paket {$plan->name} berhasil dikirim! Menunggu persetujuan Admin FitSpace untuk aktivasi kuota.",
             'membership' => $membership,
             'payment' => $payment,
         ], 201);

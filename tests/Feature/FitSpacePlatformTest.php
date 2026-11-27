@@ -643,13 +643,14 @@ class FitSpacePlatformTest extends TestCase
         ])->assertStatus(200)->assertJsonPath('user.role', 'coach');
         $newCoachToken = (string) $coachLogin->json('token');
 
-        // 6. Coach CANNOT approve another Coach (403)
+        // 6. Coach CANNOT approve accounts or bookings (centralized strictly under Admin FitSpace -> 403 ADMIN_APPROVAL_ONLY)
         $pendingSeededCoach = User::where('email', 'coach.calon@fitspace.local')->firstOrFail();
         $this->withToken($newCoachToken)
             ->postJson("/api/v1/coach/accounts/{$pendingSeededCoach->id}/decision", ['decision' => 'approved'])
-            ->assertStatus(403);
+            ->assertStatus(403)
+            ->assertJsonPath('code', 'ADMIN_APPROVAL_ONLY');
 
-        // 7. Pending Member (18+) cannot transact before Coach approval, then succeeds after Coach approves!
+        // 7. Pending Member (18+) cannot transact before Admin approval, then succeeds after Admin approves!
         $pendingMember = User::where('email', 'member.baru@fitspace.local')->firstOrFail();
         $scheduleId = (int) DB::table('class_schedules')->where('starts_at', '>', now()->addHours(20))->value('id');
         $pendingMemberToken = $pendingMember->createToken('test-pending')->plainTextToken;
@@ -660,12 +661,20 @@ class FitSpacePlatformTest extends TestCase
             'booking_type' => 'per_session',
         ])->assertStatus(403)->assertJsonPath('code', 'APPROVAL_PENDING');
 
+        // Coach cannot approve Member account (403)
         $this->app['auth']->forgetGuards();
         $this->withToken($newCoachToken)
-            ->postJson("/api/v1/coach/accounts/{$pendingMember->id}/decision", [
+            ->postJson("/api/v1/coach/accounts/{$pendingMember->id}/decision", ['decision' => 'approved'])
+            ->assertStatus(403)
+            ->assertJsonPath('code', 'ADMIN_APPROVAL_ONLY');
+
+        // Admin approves Member account -> Member can now select classes & memberships!
+        $this->app['auth']->forgetGuards();
+        $this->withToken($adminToken)
+            ->postJson("/api/v1/admin/users/{$pendingMember->id}/decision", [
                 'decision' => 'approved',
-                'notes' => 'Usia 18+ dan profil terverifikasi Coach.',
-            ])->assertStatus(200)->assertJsonPath('account.approval_status', 'approved');
+                'notes' => 'Usia 18+ dan profil terverifikasi Admin.',
+            ])->assertStatus(200)->assertJsonPath('user.approval_status', 'approved');
 
         $this->app['auth']->forgetGuards();
         $bkCreated = $this->withToken($pendingMemberToken)->postJson('/api/v1/bookings', [
@@ -674,18 +683,41 @@ class FitSpacePlatformTest extends TestCase
         ])->assertStatus(201);
         $newBookingId = (int) $bkCreated->json('booking.id');
 
-        // 7b. Coach confirms pending booking -> immediately becomes confirmed + QR issued & visible in Member dashboard!
+        // Coach cannot confirm Member booking (403)
         $this->app['auth']->forgetGuards();
         $this->withToken($newCoachToken)
             ->postJson("/api/v1/coach/bookings/{$newBookingId}/confirm")
+            ->assertStatus(403)
+            ->assertJsonPath('code', 'ADMIN_APPROVAL_ONLY');
+
+        // 7b. Admin approves Member booking -> immediately confirmed + QR issued & visible in Member dashboard!
+        $this->app['auth']->forgetGuards();
+        $this->withToken($adminToken)
+            ->postJson("/api/v1/admin/bookings/{$newBookingId}/approve")
             ->assertStatus(200)
             ->assertJsonPath('booking.status', 'confirmed');
+
+        // 7c. Member purchases membership -> Admin approves & activates it!
+        $planId = (int) DB::table('membership_plans')->where('slug', 'paket-starter-5')->value('id');
+        $this->app['auth']->forgetGuards();
+        $memCreated = $this->withToken($pendingMemberToken)->postJson('/api/v1/memberships/purchase', [
+            'plan_id' => $planId,
+            'gateway' => 'midtrans',
+        ])->assertStatus(201);
+        $newMemId = (int) $memCreated->json('membership.id');
+
+        $this->app['auth']->forgetGuards();
+        $this->withToken($adminToken)
+            ->postJson("/api/v1/admin/memberships/{$newMemId}/approve")
+            ->assertStatus(200)
+            ->assertJsonPath('membership.status', 'active');
 
         $this->app['auth']->forgetGuards();
         $memberDash = $this->withToken($pendingMemberToken)->getJson('/api/v1/member/dashboard')->assertStatus(200);
         $this->assertSame('approved', $memberDash->json('approval_status'));
         $confirmedIds = collect($memberDash->json('bookings'))->where('status', 'confirmed')->pluck('id')->all();
         $this->assertContains($newBookingId, $confirmedIds);
+        $this->assertSame('active', $memberDash->json('active_membership.status'));
 
         // 8. Guardian child age MUST be < 18
         $guardian = User::where('email', 'wali@fitspace.local')->firstOrFail();
@@ -694,6 +726,56 @@ class FitSpacePlatformTest extends TestCase
             'full_name' => 'Anak Sudah Dewasa',
             'birth_date' => now()->subYears(20)->format('Y-m-d'),
         ])->assertStatus(422)->assertJsonValidationErrors(['birth_date']);
+    }
+
+    public function test_coach_schedule_reschedule_requires_admin_approval_and_notifies_member_and_guardian(): void
+    {
+        $admin = User::where('email', 'admin@fitspace.local')->firstOrFail();
+        $coachNadia = User::where('email', 'coach@fitspace.local')->firstOrFail();
+        $coachDimas = User::where('email', 'coach.dimas@fitspace.local')->firstOrFail();
+        $member = User::where('email', 'member@fitspace.local')->firstOrFail();
+
+        $booking = DB::table('bookings')->where('booking_code', 'FS-BK-2026-0001')->first();
+        $scheduleId = (int) $booking->schedule_id;
+        $proposedTime = now()->addDays(3)->setTime(16, 0)->format('Y-m-d H:i:s');
+
+        // 1. Unassigned Coach Dimas cannot request reschedule for Coach Nadia's class (403)
+        Sanctum::actingAs($coachDimas);
+        $this->postJson('/api/v1/coach/schedule-reschedules', [
+            'schedule_id' => $scheduleId,
+            'proposed_starts_at' => $proposedTime,
+            'reason' => 'Tidak sah',
+        ])->assertStatus(403);
+
+        // 2. Assigned Coach Nadia requests reschedule -> stays pending until Admin approves!
+        Sanctum::actingAs($coachNadia);
+        $reqRes = $this->postJson('/api/v1/coach/schedule-reschedules', [
+            'schedule_id' => $scheduleId,
+            'proposed_starts_at' => $proposedTime,
+            'reason' => 'Coach Nadia berhalangan hadir karena seminar pelatihan, mohon geser ke jam 16:00 WIB.',
+        ])->assertStatus(201)->assertJsonPath('reschedule.status', 'pending');
+        $rescheduleId = (int) $reqRes->json('reschedule.id');
+
+        // Schedule NOT altered yet before Admin approval
+        $this->assertNotSame($proposedTime, DB::table('class_schedules')->where('id', $scheduleId)->value('starts_at'));
+
+        // 3. Admin approves Coach reschedule -> updates schedule, updates QR expiry, and forwards notification to affected Member!
+        Sanctum::actingAs($admin);
+        $this->postJson("/api/v1/admin/schedule-reschedules/{$rescheduleId}/decision", [
+            'decision' => 'approved',
+            'admin_notes' => 'Disetujui Admin dan diteruskan ke seluruh peserta terdaftar.',
+        ])->assertStatus(200)
+            ->assertJsonPath('status', 'approved')
+            ->assertJsonPath('affected_participants_count', 1);
+
+        $this->assertSame($proposedTime, DB::table('class_schedules')->where('id', $scheduleId)->value('starts_at'));
+
+        // 4. Member sees the Admin-approved schedule change notification in dashboard!
+        Sanctum::actingAs($member);
+        $dash = $this->getJson('/api/v1/member/dashboard')->assertStatus(200);
+        $notifBodies = collect($dash->json('notifications'))->pluck('body')->implode(' ');
+        $this->assertStringContainsString('Coach Nadia', $notifBodies);
+        $this->assertStringContainsString('persetujuan Admin', $notifBodies);
     }
 
     public function test_admin_schedule_sync_issue_resolution_and_coach_report_publish(): void

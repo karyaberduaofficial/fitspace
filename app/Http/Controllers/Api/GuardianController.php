@@ -65,11 +65,19 @@ class GuardianController extends Controller
             ->limit(20)
             ->get();
 
+        $notifications = DB::table('notifications')
+            ->where('user_id', $user->id)
+            ->whereIn('type', ['coach_schedule_rescheduled', 'booking_confirmed', 'membership_approved', 'account_approved'])
+            ->orderByDesc('created_at')
+            ->limit(12)
+            ->get();
+
         return response()->json([
             'guardian' => $guardian,
             'children' => $children,
             'progress_reports' => $progressReports,
             'issues' => $issues,
+            'notifications' => $notifications,
             'approval_status' => $user->approval_status ?? 'approved',
             'approval_notes' => $user->approval_notes,
         ]);

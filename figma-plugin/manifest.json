@@ -1,13 +1,15 @@
 {
-  "name": "FitSpace V8 — Full 1:1 Web UI/UX & Connected End-to-End Prototype",
-  "id": "fitspace-pwa-design-system-v8",
+  "name": "FitSpace V9 — 1:1 Web UI/UX, Vertical Dropdowns, Donut Charts & Full Prototype",
+  "id": "fitspace-pwa-design-system-v9-generator",
   "api": "1.0.0",
   "main": "code.js",
-  "capabilities": [],
-  "enableProposedApi": false,
+  "editorType": [
+    "figma"
+  ],
   "documentAccess": "dynamic-page",
-  "editorType": ["figma"],
   "networkAccess": {
-    "allowedDomains": ["none"]
+    "allowedDomains": [
+      "none"
+    ]
   }
 }

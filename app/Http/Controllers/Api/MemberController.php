@@ -72,12 +72,30 @@ class MemberController extends Controller
             ->limit(20)
             ->get();
 
+        $pendingMemberships = DB::table('memberships as m')
+            ->join('membership_plans as p', 'p.id', '=', 'm.plan_id')
+            ->select('m.*', 'p.name as plan_name', 'p.price')
+            ->where('m.user_id', $user->id)
+            ->where('m.status', 'pending_payment')
+            ->orderByDesc('m.created_at')
+            ->limit(10)
+            ->get();
+
+        $scheduleNotifications = DB::table('notifications')
+            ->where('user_id', $user->id)
+            ->whereIn('type', ['coach_schedule_rescheduled', 'booking_confirmed', 'membership_approved', 'account_approved'])
+            ->orderByDesc('created_at')
+            ->limit(12)
+            ->get();
+
         return response()->json([
             'active_membership' => $activeMembership,
+            'pending_memberships' => $pendingMemberships,
             'bookings' => $bookings,
             'payments' => $payments,
             'progress_reports' => $reports,
             'issues' => $issues,
+            'notifications' => $scheduleNotifications,
             'approval_status' => $user->approval_status ?? 'approved',
             'approval_notes' => $user->approval_notes,
         ]);

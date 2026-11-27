@@ -739,6 +739,42 @@ class DatabaseSeeder extends Seeder
             DB::table('settings')->insert(['key' => $k, 'value' => $v, 'group_name' => $g, 'updated_by' => $adminUser->id, 'created_at' => $now, 'updated_at' => $now]);
         }
 
+        // Sample Pending Coach Schedule Reschedule Request (waiting Admin ACC -> auto-forward to Member/Orang Tua)
+        DB::table('coach_schedule_reschedules')->insert([
+            'schedule_id' => $schPilatesMain,
+            'coach_id' => $coachNadiaId,
+            'original_starts_at' => $now->copy()->addHours(26),
+            'original_ends_at' => $now->copy()->addHours(27),
+            'proposed_starts_at' => $now->copy()->addHours(29),
+            'proposed_ends_at' => $now->copy()->addHours(30),
+            'reason' => 'Berhalangan hadir pada jam semula karena agenda workshop sertifikasi STOTT Pilates; mohon digeser 3 jam kemudian.',
+            'status' => 'pending',
+            'created_at' => $now->copy()->subHours(2),
+            'updated_at' => $now->copy()->subHours(2),
+        ]);
+
+        // Sample Admin-Approved Schedule Reschedule Notifications for Member & Guardian
+        DB::table('notifications')->insert([
+            [
+                'user_id' => $memberUser->id,
+                'type' => 'coach_schedule_rescheduled',
+                'title' => 'Perubahan Jadwal Boxing Conditioning Disetujui Admin',
+                'body' => 'Jadwal Boxing Conditioning bersama Coach Dimas Pratama telah disesuaikan atas persetujuan Admin. Tiket QR Anda tetap berlaku otomatis.',
+                'data' => json_encode(['schedule_id' => $schBoxing]),
+                'created_at' => $now->copy()->subHours(6),
+                'updated_at' => $now->copy()->subHours(6),
+            ],
+            [
+                'user_id' => $guardianUser->id,
+                'type' => 'coach_schedule_rescheduled',
+                'title' => 'Perubahan Jadwal Swimming Kids Disetujui Admin',
+                'body' => 'Jadwal Swimming Kids Foundation (Alya Putri) bersama Coach Raka Wijaya telah disinkronkan oleh Admin. Tiket QR anak tetap aktif otomatis.',
+                'data' => json_encode(['schedule_id' => $schSwimKids]),
+                'created_at' => $now->copy()->subHours(5),
+                'updated_at' => $now->copy()->subHours(5),
+            ],
+        ]);
+
         // Initial Audit Log
         DB::table('audit_logs')->insert([
             'user_id' => $adminUser->id, 'action' => 'system.seeded', 'entity_type' => 'system',

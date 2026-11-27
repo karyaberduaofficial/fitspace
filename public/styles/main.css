@@ -2051,3 +2051,114 @@ textarea {
 .password-toggle-btn[aria-pressed="true"] {
   color: var(--color-secondary);
 }
+
+/* ---------- Circular / Donut SVG Charts & Schedule Notifications (100% CSP Clean) ---------- */
+.donut-layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 0.75rem;
+}
+
+.donut-svg {
+  width: 176px;
+  height: 176px;
+  flex: 0 0 176px;
+  display: block;
+}
+
+.ring-svg {
+  width: 112px;
+  height: 112px;
+  flex: 0 0 112px;
+  display: block;
+}
+
+.ring-metric-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0.6rem 0 0.85rem;
+}
+
+.donut-legend {
+  flex: 1 1 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.donut-legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.86rem;
+}
+
+.donut-legend-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.donut-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  display: inline-block;
+  flex: 0 0 11px;
+}
+
+.donut-swatch-0 { background: #1d4ed8; }
+.donut-swatch-1 { background: #0ea5e9; }
+.donut-swatch-2 { background: #15803d; }
+.donut-swatch-3 { background: #d97706; }
+.donut-swatch-4 { background: #6366f1; }
+.donut-swatch-5 { background: #e11d48; }
+
+.schedule-notif-banner {
+  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+  border: 1px solid #93c5fd;
+  border-left: 4px solid #1d4ed8;
+  border-radius: var(--radius-md);
+  padding: 0.95rem 1.1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.schedule-notif-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgba(29, 78, 216, 0.2);
+}
+
+.schedule-notif-item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.reschedule-diff {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.84rem;
+}
+
+.reschedule-old {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.reschedule-new {
+  color: var(--color-secondary);
+  font-weight: 700;
+}

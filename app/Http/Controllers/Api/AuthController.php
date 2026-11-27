@@ -124,19 +124,18 @@ class AuthController extends Controller
             ], 201);
         }
 
-        // Member (18+) & Guardian start pending Coach approval; issue token so they can monitor verification status
-        $coachIds = DB::table('users')
-            ->where('role', 'coach')
+        // Member (18+) & Guardian start pending Admin approval; issue token so they can monitor verification status
+        $adminIds = DB::table('users')
+            ->where('role', 'admin')
             ->where('is_active', true)
-            ->where('approval_status', 'approved')
             ->pluck('id');
-        foreach ($coachIds as $cid) {
+        foreach ($adminIds as $aid) {
             $roleName = $role === 'guardian' ? 'Orang Tua / Wali' : 'Member (18+)';
             $this->audit->notify(
-                (int) $cid,
+                (int) $aid,
                 'account_approval_needed',
-                "Pendaftaran {$roleName} Menunggu Persetujuan Coach",
-                "{$user->name} ({$roleName}) menunggu persetujuan akun di Workspace Coach.",
+                "Pendaftaran {$roleName} Menunggu Persetujuan Admin",
+                "{$user->name} ({$roleName}) menunggu persetujuan akun di Portal Admin FitSpace.",
                 ['applicant_user_id' => $user->id]
             );
         }
@@ -144,9 +143,9 @@ class AuthController extends Controller
         $token = $user->createToken('fitspace-app')->plainTextToken;
 
         return response()->json([
-            'message' => 'Registrasi berhasil! Akun Anda sedang menunggu persetujuan dari Coach / Pelatih sebelum fitur booking, membership, dan laporan penuh diaktifkan.',
+            'message' => 'Registrasi berhasil! Akun Anda sedang menunggu persetujuan dari Admin FitSpace sebelum pemilihan kelas, membership, dan laporan penuh diaktifkan.',
             'requires_approval' => true,
-            'approver' => 'Coach / Pelatih',
+            'approver' => 'Admin FitSpace',
             'token' => $token,
             'user' => $this->serializeUser($user),
         ], 201);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AuditService;
+use App\Services\BookingService;
 use App\Services\FinanceService;
 use App\Services\PaymentGatewayService;
 use App\Services\ScheduleConflictService;
@@ -13,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
@@ -21,6 +23,7 @@ class AdminController extends Controller
         private readonly ScheduleConflictService $scheduler,
         private readonly PaymentGatewayService $payments,
         private readonly AuditService $audit,
+        private readonly BookingService $bookings,
     ) {}
 
     public function dashboard(Request $request): JsonResponse
@@ -40,8 +43,25 @@ class AdminController extends Controller
             ->limit(10)
             ->get();
 
+        $catRows = DB::table('bookings as bk')
+            ->join('class_schedules as s', 's.id', '=', 'bk.schedule_id')
+            ->join('classes as c', 'c.id', '=', 's.class_id')
+            ->join('class_categories as cat', 'cat.id', '=', 'c.category_id')
+            ->select('cat.name', DB::raw('COUNT(*) as total'))
+            ->whereIn('bk.status', ['confirmed', 'attended', 'pending_payment'])
+            ->groupBy('cat.name')
+            ->orderByDesc('total')
+            ->get();
+        $catSum = max(1, (int) $catRows->sum('total'));
+        $categoryBreakdown = $catRows->map(fn ($r) => [
+            'name' => $r->name,
+            'count' => (int) $r->total,
+            'pct' => round(((int) $r->total / $catSum) * 100, 1),
+        ])->values()->all();
+
         return response()->json([
             'finance' => $finSummary,
+            'category_breakdown' => $categoryBreakdown,
             'stats' => [
                 'confirmed_bookings' => $confirmedBookings,
                 'occupancy_rate' => $occupancy,
@@ -51,6 +71,9 @@ class AdminController extends Controller
                 'active_memberships' => DB::table('memberships')->where('status', 'active')->where('expires_at', '>', now())->count(),
                 'pending_coaches' => DB::table('users')->where('role', 'coach')->where('approval_status', 'pending')->count(),
                 'pending_availabilities' => DB::table('coach_availabilities')->where('status', 'pending')->count(),
+                'pending_coach_reschedules' => DB::table('coach_schedule_reschedules')->where('status', 'pending')->count(),
+                'pending_bookings' => DB::table('bookings')->where('status', 'pending_payment')->count(),
+                'pending_memberships' => DB::table('memberships')->where('status', 'pending_payment')->count(),
                 'open_issues' => DB::table('support_issues')->whereIn('status', ['open', 'in_progress'])->count(),
                 'pending_participants' => DB::table('users')->whereIn('role', ['member', 'guardian'])->where('approval_status', 'pending')->count(),
             ],
@@ -104,16 +127,65 @@ class AdminController extends Controller
             ->orderByRaw("CASE WHEN u.approval_status = 'pending' THEN 0 WHEN u.approval_status = 'approved' THEN 1 ELSE 2 END")
             ->orderByDesc('u.created_at')
             ->limit(60)
-            ->get()
-            ->map(function ($p) {
-                $p->age = $p->birth_date ? Carbon::parse($p->birth_date)->age : null;
+            ->get();
+        $participants = $participants->map(function ($p) {
+            $p->age = $p->birth_date ? Carbon::parse($p->birth_date)->age : null;
 
-                return $p;
-            });
+            return $p;
+        });
+
+        $guardianIds = $participants->where('role', 'guardian')->pluck('id')->all();
+        $kidsByUser = [];
+        if (count($guardianIds) > 0) {
+            $kidRows = DB::table('guardians as g')
+                ->join('children as ch', 'ch.guardian_id', '=', 'g.id')
+                ->select('g.user_id', 'ch.id', 'ch.full_name', 'ch.birth_date')
+                ->whereIn('g.user_id', $guardianIds)
+                ->get();
+            foreach ($kidRows as $kr) {
+                $kr->age = Carbon::parse($kr->birth_date)->age;
+                $kidsByUser[$kr->user_id][] = $kr;
+            }
+        }
+        $participants = $participants->map(function ($p) use ($kidsByUser) {
+            $p->children = $kidsByUser[$p->id] ?? [];
+
+            return $p;
+        });
+
+        $pendingBookings = DB::table('bookings as bk')
+            ->join('class_schedules as s', 's.id', '=', 'bk.schedule_id')
+            ->join('classes as c', 'c.id', '=', 's.class_id')
+            ->join('users as u', 'u.id', '=', 'bk.user_id')
+            ->leftJoin('children as ch', 'ch.id', '=', 'bk.child_id')
+            ->select(
+                'bk.id', 'bk.booking_code', 'bk.status', 'bk.final_amount', 'bk.booking_type', 'bk.created_at',
+                's.starts_at', 'c.name as class_name', 'u.name as user_name', 'u.role as user_role',
+                'ch.full_name as child_name'
+            )
+            ->where('bk.status', 'pending_payment')
+            ->orderByDesc('bk.created_at')
+            ->limit(40)
+            ->get();
+
+        $pendingMemberships = DB::table('memberships as m')
+            ->join('membership_plans as p', 'p.id', '=', 'm.plan_id')
+            ->join('users as u', 'u.id', '=', 'm.user_id')
+            ->select(
+                'm.id', 'm.status', 'm.total_quota', 'm.created_at',
+                'p.name as plan_name', 'p.price', 'p.duration_days',
+                'u.name as user_name', 'u.role as user_role', 'u.email as user_email'
+            )
+            ->where('m.status', 'pending_payment')
+            ->orderByDesc('m.created_at')
+            ->limit(40)
+            ->get();
 
         return response()->json([
             'coaches' => $coaches,
             'participants' => $participants,
+            'pending_bookings' => $pendingBookings,
+            'pending_memberships' => $pendingMemberships,
         ]);
     }
 
@@ -161,7 +233,7 @@ class AdminController extends Controller
             "coach_{$decision}",
             $decision === 'approved' ? 'Akun Coach Anda Disetujui Admin' : 'Pengajuan Akun Coach Ditolak',
             $decision === 'approved'
-                ? 'Selamat! Admin FitSpace telah menyetujui akun Coach Anda. Anda kini dapat login, menyetujui akun member/orang tua, dan mengelola sesi latihan.'
+                ? 'Selamat! Admin FitSpace telah menyetujui akun Coach Anda. Anda kini dapat login, menerima jadwal resmi, mengelola sesi latihan, serta mengajukan reschedule jika berhalangan.'
                 : ('Pengajuan akun Coach Anda belum dapat disetujui.'.($notes ? " Catatan: {$notes}" : '')),
             ['approved_by' => $request->user()->id]
         );
@@ -231,6 +303,89 @@ class AdminController extends Controller
     }
 
     /**
+     * Admin approves a Member or Orang Tua class booking -> marks paid, confirms booking, issues single-use QR!
+     */
+    public function approveBooking(Request $request, int $id): JsonResponse
+    {
+        $booking = DB::table('bookings')->where('id', $id)->first();
+        if (! $booking) {
+            return response()->json(['message' => 'Booking kelas tidak ditemukan.'], 404);
+        }
+        if (in_array($booking->status, ['confirmed', 'attended'], true)) {
+            return response()->json(['message' => 'Booking kelas sudah terkonfirmasi.', 'booking' => $booking]);
+        }
+
+        $payment = DB::table('payments')->where('booking_id', $booking->id)->first();
+        if ($payment && $payment->status !== 'paid') {
+            $res = $this->payments->markPaymentPaid((int) $payment->id, 'ADMIN-ACC-'.$request->user()->id);
+            $qr = $res['qr'];
+        } else {
+            $schedule = DB::table('class_schedules')->where('id', $booking->schedule_id)->first();
+            DB::table('bookings')->where('id', $booking->id)->update(['status' => 'confirmed', 'updated_at' => now()]);
+            $qr = $this->bookings->issueQrCode((int) $booking->id, $schedule?->ends_at ?? now()->addDay());
+        }
+
+        PublicController::clearBootstrapCache();
+        $this->audit->log($request->user()->id, 'admin.booking_approved', 'booking', $booking->id, [], $request);
+        $this->audit->notify(
+            (int) $booking->user_id,
+            'booking_confirmed',
+            'Pemilihan Kelas Disetujui Admin!',
+            "Admin FitSpace telah menyetujui booking {$booking->booking_code}. Tiket QR absensi Anda kini aktif.",
+            ['booking_id' => $booking->id]
+        );
+
+        return response()->json([
+            'message' => "Booking {$booking->booking_code} berhasil disetujui Admin & QR Code diterbitkan.",
+            'booking' => DB::table('bookings')->where('id', $booking->id)->first(),
+            'qr' => $qr,
+        ]);
+    }
+
+    /**
+     * Admin approves a Member or Orang Tua membership purchase -> marks paid & activates quota!
+     */
+    public function approveMembership(Request $request, int $id): JsonResponse
+    {
+        $membership = DB::table('memberships as m')
+            ->join('membership_plans as p', 'p.id', '=', 'm.plan_id')
+            ->select('m.*', 'p.name as plan_name')
+            ->where('m.id', $id)
+            ->first();
+
+        if (! $membership) {
+            return response()->json(['message' => 'Pengajuan membership tidak ditemukan.'], 404);
+        }
+        if ($membership->status === 'active') {
+            return response()->json(['message' => 'Membership sudah aktif.', 'membership' => $membership]);
+        }
+
+        $payment = DB::table('payments')->where('membership_id', $membership->id)->first();
+        if ($payment && $payment->status !== 'paid') {
+            $this->payments->markPaymentPaid((int) $payment->id, 'ADMIN-MEM-ACC-'.$request->user()->id);
+        } else {
+            DB::table('memberships')->where('id', $membership->id)->update([
+                'status' => 'active',
+                'updated_at' => now(),
+            ]);
+        }
+
+        $this->audit->log($request->user()->id, 'admin.membership_approved', 'membership', $membership->id, [], $request);
+        $this->audit->notify(
+            (int) $membership->user_id,
+            'membership_approved',
+            'Paket Membership Disetujui & Aktif!',
+            "Admin FitSpace telah menyetujui & mengaktifkan paket {$membership->plan_name} ({$membership->total_quota} kuota sesi) Anda.",
+            ['membership_id' => $membership->id]
+        );
+
+        return response()->json([
+            'message' => "Paket {$membership->plan_name} berhasil disetujui & diaktifkan untuk peserta.",
+            'membership' => DB::table('memberships')->where('id', $membership->id)->first(),
+        ]);
+    }
+
+    /**
      * Unified Schedule Synchronization Dashboard between Coaches and Members/Guardians.
      */
     public function scheduleSync(): JsonResponse
@@ -245,6 +400,24 @@ class AdminController extends Controller
             )
             ->orderByRaw("CASE WHEN ca.status = 'pending' THEN 0 ELSE 1 END")
             ->orderByDesc('ca.created_at')
+            ->limit(40)
+            ->get();
+
+        $scheduleReschedules = DB::table('coach_schedule_reschedules as cr')
+            ->join('class_schedules as s', 's.id', '=', 'cr.schedule_id')
+            ->join('classes as c', 'c.id', '=', 's.class_id')
+            ->join('coaches as co', 'co.id', '=', 'cr.coach_id')
+            ->join('users as cu', 'cu.id', '=', 'co.user_id')
+            ->join('rooms as r', 'r.id', '=', 's.room_id')
+            ->join('branches as b', 'b.id', '=', 's.branch_id')
+            ->leftJoin('users as rv', 'rv.id', '=', 'cr.reviewed_by')
+            ->select(
+                'cr.*', 'c.name as class_name', 'cu.name as coach_name',
+                'r.name as room_name', 'b.name as branch_name', 's.booked_count',
+                'rv.name as reviewed_by_name'
+            )
+            ->orderByRaw("CASE WHEN cr.status = 'pending' THEN 0 ELSE 1 END")
+            ->orderByDesc('cr.created_at')
             ->limit(40)
             ->get();
 
@@ -265,7 +438,171 @@ class AdminController extends Controller
 
         return response()->json([
             'availabilities' => $availabilities,
+            'schedule_reschedules' => $scheduleReschedules,
             'schedules' => $schedules,
+        ]);
+    }
+
+    /**
+     * Admin approves/rejects a Coach's schedule reschedule request and automatically forwards approved changes to all affected Members & Orang Tua!
+     */
+    public function decideCoachScheduleReschedule(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'decision' => ['required', 'in:approved,rejected'],
+            'admin_notes' => ['nullable', 'string', 'max:400'],
+        ]);
+
+        $reqRow = DB::table('coach_schedule_reschedules as cr')
+            ->join('class_schedules as s', 's.id', '=', 'cr.schedule_id')
+            ->join('classes as c', 'c.id', '=', 's.class_id')
+            ->join('coaches as co', 'co.id', '=', 'cr.coach_id')
+            ->join('users as cu', 'cu.id', '=', 'co.user_id')
+            ->select(
+                'cr.*', 's.room_id', 's.branch_id', 's.coach_id as sched_coach_id',
+                'c.name as class_name', 'cu.id as coach_user_id', 'cu.name as coach_name'
+            )
+            ->where('cr.id', $id)
+            ->first();
+
+        if (! $reqRow) {
+            return response()->json(['message' => 'Pengajuan reschedule jadwal Coach tidak ditemukan.'], 404);
+        }
+        if ($reqRow->status !== 'pending') {
+            return response()->json(['message' => 'Pengajuan reschedule ini sudah diproses sebelumnya.'], 422);
+        }
+
+        $decision = (string) $validated['decision'];
+        $notes = $validated['admin_notes'] ?? null;
+        $now = now();
+        $affectedCount = 0;
+
+        if ($decision === 'approved') {
+            $startStr = Carbon::parse($reqRow->proposed_starts_at)->format('Y-m-d H:i:s');
+            $endStr = Carbon::parse($reqRow->proposed_ends_at)->format('Y-m-d H:i:s');
+
+            // Anti-conflict verification excluding the schedule being moved
+            $coachConflict = DB::table('class_schedules')
+                ->where('id', '!=', $reqRow->schedule_id)
+                ->where('coach_id', $reqRow->sched_coach_id)
+                ->where('status', '!=', 'cancelled')
+                ->where('starts_at', '<', $endStr)
+                ->where('ends_at', '>', $startStr)
+                ->exists();
+            if ($coachConflict) {
+                throw ValidationException::withMessages([
+                    'proposed_starts_at' => ['Waktu pengganti bentrok dengan jadwal Coach lain pada rentang jam tersebut.'],
+                ]);
+            }
+
+            $roomConflict = DB::table('class_schedules')
+                ->where('id', '!=', $reqRow->schedule_id)
+                ->where('room_id', $reqRow->room_id)
+                ->where('status', '!=', 'cancelled')
+                ->where('starts_at', '<', $endStr)
+                ->where('ends_at', '>', $startStr)
+                ->exists();
+            if ($roomConflict) {
+                throw ValidationException::withMessages([
+                    'proposed_starts_at' => ['Waktu pengganti bentrok dengan penggunaan ruangan studio lain.'],
+                ]);
+            }
+
+            $affectedBookings = DB::transaction(function () use ($reqRow, $startStr, $endStr, $request, $notes, $now) {
+                DB::table('class_schedules')->where('id', $reqRow->schedule_id)->update([
+                    'starts_at' => $startStr,
+                    'ends_at' => $endStr,
+                    'updated_at' => $now,
+                ]);
+
+                $bookings = DB::table('bookings as b')
+                    ->leftJoin('children as ch', 'ch.id', '=', 'b.child_id')
+                    ->select('b.id', 'b.user_id', 'b.booking_code', 'ch.full_name as child_name')
+                    ->where('b.schedule_id', $reqRow->schedule_id)
+                    ->whereIn('b.status', ['pending_payment', 'confirmed'])
+                    ->get();
+
+                $bookingIds = $bookings->pluck('id')->all();
+                if (count($bookingIds) > 0) {
+                    DB::table('attendance_qr_codes')
+                        ->whereIn('booking_id', $bookingIds)
+                        ->whereNull('used_at')
+                        ->update([
+                            'expires_at' => Carbon::parse($endStr)->copy()->addHours(2)->format('Y-m-d H:i:s'),
+                            'updated_at' => $now,
+                        ]);
+                }
+
+                DB::table('coach_schedule_reschedules')->where('id', $reqRow->id)->update([
+                    'status' => 'approved',
+                    'reviewed_by' => $request->user()->id,
+                    'admin_notes' => $notes,
+                    'reviewed_at' => $now,
+                    'affected_participants_count' => $bookings->count(),
+                    'updated_at' => $now,
+                ]);
+
+                return $bookings;
+            });
+
+            $affectedCount = $affectedBookings->count();
+            $oldFmt = Carbon::parse($reqRow->original_starts_at)->format('d M Y H:i').' WIB';
+            $newFmt = Carbon::parse($reqRow->proposed_starts_at)->format('d M Y H:i').' WIB';
+
+            foreach ($affectedBookings as $bk) {
+                $targetLabel = $bk->child_name ? " ({$bk->child_name})" : '';
+                $this->audit->notify(
+                    (int) $bk->user_id,
+                    'coach_schedule_rescheduled',
+                    "Perubahan Jadwal {$reqRow->class_name} Disetujui Admin",
+                    "Jadwal {$reqRow->class_name}{$targetLabel} bersama {$reqRow->coach_name} berubah dari {$oldFmt} menjadi {$newFmt} atas persetujuan Admin. Alasan Coach: {$reqRow->reason}. Tiket QR Anda diperbarui otomatis.",
+                    [
+                        'schedule_id' => $reqRow->schedule_id,
+                        'booking_id' => $bk->id,
+                        'original_starts_at' => $reqRow->original_starts_at,
+                        'proposed_starts_at' => $reqRow->proposed_starts_at,
+                    ]
+                );
+            }
+
+            $this->audit->notify(
+                (int) $reqRow->coach_user_id,
+                'coach_reschedule_approved',
+                'Pengajuan Reschedule Jadwal Anda Disetujui Admin',
+                "Admin menyetujui perubahan jadwal {$reqRow->class_name} ke {$newFmt} dan telah meneruskan pemberitahuan ke {$affectedCount} Member / Orang Tua terdaftar.",
+                ['reschedule_id' => $reqRow->id]
+            );
+
+            PublicController::clearBootstrapCache();
+        } else {
+            DB::table('coach_schedule_reschedules')->where('id', $reqRow->id)->update([
+                'status' => 'rejected',
+                'reviewed_by' => $request->user()->id,
+                'admin_notes' => $notes,
+                'reviewed_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            $this->audit->notify(
+                (int) $reqRow->coach_user_id,
+                'coach_reschedule_rejected',
+                'Pengajuan Reschedule Jadwal Ditolak Admin',
+                "Pengajuan perubahan jadwal {$reqRow->class_name} belum dapat disetujui Admin.".($notes ? " Catatan: {$notes}" : ''),
+                ['reschedule_id' => $reqRow->id]
+            );
+        }
+
+        $this->audit->log($request->user()->id, "admin.coach_reschedule_{$decision}", 'coach_schedule_reschedule', $id, [
+            'schedule_id' => $reqRow->schedule_id,
+            'affected_participants_count' => $affectedCount,
+        ], $request);
+
+        return response()->json([
+            'message' => $decision === 'approved'
+                ? "Reschedule Coach disetujui Admin & pemberitahuan otomatis diteruskan ke {$affectedCount} Member / Orang Tua."
+                : 'Pengajuan reschedule jadwal Coach ditolak.',
+            'status' => $decision,
+            'affected_participants_count' => $affectedCount,
         ]);
     }
 
