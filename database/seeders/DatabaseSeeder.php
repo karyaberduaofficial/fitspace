@@ -17,8 +17,8 @@ class DatabaseSeeder extends Seeder
         // 1. Roles (4 Authenticated Roles + Guest Preview Role)
         $roleMap = [];
         foreach ([
-            ['admin', 'Administrator', 'Portal Admin khusus: persetujuan Coach, sinkronisasi jadwal pelatih-member, penanganan masalah & multi-branch'],
-            ['coach', 'Coach / Pelatih', 'Persetujuan akun Member & Orang Tua, publikasi nilai/laporan, materi, absensi QR & ajuan jadwal'],
+            ['admin', 'Administrator', 'Portal Admin khusus: persetujuan akun/kelas/membership, ACC reschedule jadwal Coach, penanganan masalah & multi-branch'],
+            ['coach', 'Coach / Pelatih', 'Menerima jadwal resmi Admin, memindai QR absensi, mengisi materi & nilai (1–4), serta mengajukan reschedule jadwal ke Admin'],
             ['member', 'Member (18+)', 'Peserta usia 18 tahun ke atas: daftar, membership, booking kelas, reschedule, QR absensi & laporan'],
             ['guardian', 'Orang Tua / Wali', 'Perwakilan anak (<18 thn): kelola profil anak, membership, kelas sesuai usia, jadwal, QR absensi & rapor anak'],
             ['guest', 'Akun Tamu', 'Akses pratinjau terbatas katalog kelas, jadwal live & paket membership sebelum login Member/Orang Tua'],

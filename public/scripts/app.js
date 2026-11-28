@@ -1,5 +1,5 @@
 /* ============================================================================
- * FitSpace PWA — Interactive Multi-Role, Multi-Hardware & Smart Glasses Runtime
+ * FitSpace PWA — Interactive Multi-Role & Multi-Device Runtime
  * 100% CSP script-src 'self' compliant (zero inline handlers, strict escaping)
  * ============================================================================ */
 
@@ -26,7 +26,6 @@
     activeTab: 'overview',
     activity: 'portal',
     hardware: 'auto',
-    hudIndex: 0,
     workspaceData: {},
     apiCache: {},
     lastAuthSyncAt: 0,
@@ -122,11 +121,6 @@
       badge: 'LAYANAN PENDAFTARAN & BOOKING CEPAT',
       cta: 'Daftar & Booking Sekarang',
       summary: 'Alur tervalidasi untuk pendaftaran member, pembelian membership, dan pembayaran digital.',
-    },
-    'handsfree-hud': {
-      badge: 'ASISTEN HANDS-FREE · KACAMATA PINTAR HUD',
-      cta: 'Aktifkan Optical HUD (G)',
-      summary: 'Kartu tunggal Optical Black (#000000) berkontras tinggi dengan navigasi D-Pad, TTS Bacakan, dan Perintah Suara.',
     },
   };
 
@@ -413,7 +407,6 @@
     renderHeroSchedules();
     renderPublicClasses();
     renderMembershipPlans();
-    renderHudCard();
   }
 
   function renderBranchSelector() {
@@ -1684,16 +1677,7 @@
     if (tab === 'overview') {
       const scheds = data.schedules || [];
       const att = data.attendance_stats || { total: 0, present: 0, rate: 100 };
-      const pendResch = Number(data.coach?.pending_reschedules_count || 0);
       main.innerHTML = `
-        ${pendResch > 0 ? `
-          <div class="approval-banner">
-            <div>
-              <strong>${esc(pendResch)} Pengajuan Reschedule Jadwal Menunggu Persetujuan Admin</strong>
-              <div>Jika disetujui Admin, perubahan jadwal otomatis diteruskan ke seluruh Member &amp; Orang Tua terkait.</div>
-            </div>
-            <button type="button" class="btn btn-primary btn-sm" data-action="ws-tab" data-tab="reschedule">Pantau Status Reschedule</button>
-          </div>` : ''}
         <div class="panel-grid-2">
           <article class="card card-dark">
             <span class="pill pill-info">SINGLE-USE HMAC QR VALIDATOR</span>
@@ -2171,48 +2155,15 @@
     await renderMemberWorkspace(tab, main);
   }
 
-  // ---------- Multi-Hardware & Smart Glasses Optical HUD ----------
-  function getHudCards() {
-    const base = state.schedules.slice(0, 4).map((s, idx) => ({
-      title: `${s.class_name} (${formatDateTime(s.starts_at)})`,
-      body: `Coach ${s.coach_name} · ${s.room_name} (${s.branch_name}) · Peserta ${s.booked_count}/${s.capacity}. Aktivitas aktif: ${state.activity}.`,
-      meta: `OPTICAL HUD ${idx + 1} / ${Math.min(4, Math.max(1, state.schedules.length))} · FITSPACE`,
-    }));
-    if (base.length) return base;
-    return [
-      {
-        title: 'FitSpace Optical HUD Siap',
-        body: 'Mode Kacamata Pintar dengan latar True Optical Black (#000000), kontras WCAG AAA > 14:1, navigasi D-Pad, dan perintah suara.',
-        meta: 'OPTICAL HUD 1 / 1 · FITSPACE',
-      },
-    ];
-  }
-
-  function renderHudCard() {
-    const cards = getHudCards();
-    const item = cards[state.hudIndex % cards.length];
-    $('hud-counter').textContent = item.meta;
-    $('hud-card-title').textContent = item.title;
-    $('hud-card-body').textContent = item.body;
-  }
-
+  // ---------- Multi-Device Responsive Mode (Mobile, Tablet, Desktop, Watch, TV) ----------
   function setHardwareMode(mode) {
-    state.hardware = mode || 'auto';
+    const allowed = new Set(['auto', 'watch', 'tv']);
+    state.hardware = allowed.has(mode) ? mode : 'auto';
     if (state.hardware === 'auto') {
       document.documentElement.removeAttribute('data-hardware');
-      $('hud-overlay').classList.remove('is-active');
-      $('hud-overlay').setAttribute('aria-hidden', 'true');
       return;
     }
     document.documentElement.setAttribute('data-hardware', state.hardware);
-    const isGlasses = state.hardware === 'smart-glasses';
-    $('hud-overlay').classList.toggle('is-active', isGlasses);
-    $('hud-overlay').setAttribute('aria-hidden', String(!isGlasses));
-    if (isGlasses) {
-      state.hudIndex = 0;
-      renderHudCard();
-      $('hud-next-btn')?.focus();
-    }
   }
 
   function applyActivity(id) {
@@ -2221,51 +2172,10 @@
     if ($('active-activity-badge')) $('active-activity-badge').textContent = meta.badge;
     if ($('hero-primary-cta')) $('hero-primary-cta').textContent = meta.cta;
     if ($('activity-summary-label')) $('activity-summary-label').textContent = meta.summary;
-    if (state.activity === 'handsfree-hud') {
-      if ($('hardware-select')) $('hardware-select').value = 'smart-glasses';
-      setHardwareMode('smart-glasses');
-    } else if (state.activity === 'kiosk-display') {
+    if (state.activity === 'kiosk-display') {
       if ($('hardware-select')) $('hardware-select').value = 'tv';
       setHardwareMode('tv');
     }
-    renderHudCard();
-  }
-
-  function speakHud() {
-    if (!('speechSynthesis' in window)) {
-      $('hud-voice-status').textContent = 'Browser ini tidak mendukung Text-to-Speech.';
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const text = `${$('hud-card-title').textContent}. ${$('hud-card-body').textContent}`;
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'id-ID';
-    window.speechSynthesis.speak(utter);
-    $('hud-voice-status').textContent = 'Membacakan kartu aktif (TTS)...';
-  }
-
-  function startVoiceCommand() {
-    const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!Rec) {
-      $('hud-voice-status').textContent = 'Perintah suara tidak didukung browser ini; gunakan tombol Panah Kiri/Kanan atau klik.';
-      return;
-    }
-    const rec = new Rec();
-    rec.lang = 'id-ID';
-    rec.interimResults = false;
-    $('hud-voice-status').textContent = 'Mendengarkan perintah: "berikutnya", "sebelumnya", "bacakan", atau "tutup"...';
-    rec.onresult = (ev) => {
-      const cmd = (ev.results?.[0]?.[0]?.transcript || '').toLowerCase();
-      if (cmd.includes('berikut') || cmd.includes('lanjut')) $('hud-next-btn').click();
-      else if (cmd.includes('sebelum') || cmd.includes('kembali')) $('hud-prev-btn').click();
-      else if (cmd.includes('baca')) speakHud();
-      else if (cmd.includes('tutup') || cmd.includes('keluar')) $('hud-exit-btn').click();
-      else $('hud-voice-status').textContent = `Perintah diterima: "${cmd}"`;
-    };
-    rec.onerror = () => {
-      $('hud-voice-status').textContent = 'Mikrofon tidak tersedia atau izin ditolak. Gunakan navigasi keyboard.';
-    };
-    rec.start();
   }
 
   // ---------- Event Delegation ----------
@@ -2686,28 +2596,6 @@
     loadPublicBootstrap().catch(() => {});
   });
 
-  $('toggle-hud-btn')?.addEventListener('click', () => {
-    const next = state.hardware === 'smart-glasses' ? 'auto' : 'smart-glasses';
-    if ($('hardware-select')) $('hardware-select').value = next;
-    setHardwareMode(next);
-  });
-
-  $('hud-prev-btn')?.addEventListener('click', () => {
-    const len = getHudCards().length;
-    state.hudIndex = (state.hudIndex - 1 + len) % len;
-    renderHudCard();
-  });
-  $('hud-next-btn')?.addEventListener('click', () => {
-    state.hudIndex = (state.hudIndex + 1) % getHudCards().length;
-    renderHudCard();
-  });
-  $('hud-speak-btn')?.addEventListener('click', speakHud);
-  $('hud-voice-btn')?.addEventListener('click', startVoiceCommand);
-  $('hud-exit-btn')?.addEventListener('click', () => {
-    if ($('hardware-select')) $('hardware-select').value = 'auto';
-    setHardwareMode('auto');
-  });
-
   $('open-login-btn')?.addEventListener('click', () => showLoginModal('user'));
   $('open-register-btn')?.addEventListener('click', () => showRegisterModal('member'));
   document.addEventListener('change', (e) => {
@@ -2773,21 +2661,9 @@
   });
 
   document.addEventListener('keydown', (e) => {
-    const tag = e.target?.tagName;
-    const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
     if (e.key === 'Escape') {
       closeModal();
-      if (state.hardware === 'smart-glasses') {
-        if ($('hardware-select')) $('hardware-select').value = 'auto';
-        setHardwareMode('auto');
-      }
       $('primary-navigation')?.classList.remove('is-open');
-    } else if (!typing && (e.key === 'g' || e.key === 'G')) {
-      const next = state.hardware === 'smart-glasses' ? 'auto' : 'smart-glasses';
-      setHardwareMode(next);
-    } else if (state.hardware === 'smart-glasses') {
-      if (e.key === 'ArrowRight') $('hud-next-btn')?.click();
-      if (e.key === 'ArrowLeft') $('hud-prev-btn')?.click();
     }
   });
 
@@ -2830,9 +2706,6 @@
     if (params.get('device')) {
       if ($('hardware-select')) $('hardware-select').value = params.get('device');
       setHardwareMode(params.get('device'));
-    } else if (params.get('hud') === '1') {
-      if ($('hardware-select')) $('hardware-select').value = 'smart-glasses';
-      setHardwareMode('smart-glasses');
     }
 
     if ('serviceWorker' in navigator) {

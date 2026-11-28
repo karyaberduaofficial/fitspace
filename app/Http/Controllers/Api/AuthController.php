@@ -287,7 +287,7 @@ class AuthController extends Controller
                 'Melihat seluruh katalog kelas & detail kurikulum',
                 'Memantau jadwal kelas live & ketersediaan slot studio',
                 'Membandingkan 6 pilihan paket membership & kuota sesi',
-                'Menggunakan mode pratinjau Kacamata Pintar (Optical HUD)',
+                'Melihat informasi cabang studio Jakarta Selatan & Bandung',
             ],
             'locked_features' => [
                 'Booking kelas & penyesuaian jadwal (Reschedule H-8 jam)',

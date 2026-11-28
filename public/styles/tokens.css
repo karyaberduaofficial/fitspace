@@ -1,6 +1,6 @@
 /* ============================================================================
- * FitSpace PWA — Design Tokens (Pro Web Architecture: Corporate + Child Privacy)
- * Standar kontras WCAG AA (>= 4.5:1) & Smart Glasses Optical Black AAA (>= 7:1)
+ * FitSpace PWA — Design Tokens (Corporate Multi-Device Responsive System)
+ * Standar kontras WCAG AA (>= 4.5:1) lintas Smartwatch, Mobile, Tablet, Desktop & TV
  * ============================================================================ */
 
 :root {
@@ -11,6 +11,8 @@
   --color-secondary-hover: #1e40af;
   --color-secondary-bg: #eff6ff;
   --color-accent: #0369a1;
+  --color-sky: #38bdf8;
+  --color-emerald-glow: #4ade80;
   --color-bg: #f8fafc;
   --color-surface: #ffffff;
   --color-surface-alt: #f1f5f9;
@@ -28,15 +30,6 @@
   --color-warning-bg: #fffbeb;
   --color-danger: #b91c1c;
   --color-danger-bg: #fef2f2;
-
-  --hud-bg: #000000;
-  --hud-surface: #050a14;
-  --hud-surface-alt: #0d182c;
-  --hud-primary: #38bdf8;
-  --hud-secondary: #4ade80;
-  --hud-accent: #fbbf24;
-  --hud-text: #f8fafc;
-  --hud-text-muted: #cbd5e1;
 
   --font-display: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-body: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -75,26 +68,4 @@
   --text-h2: clamp(1.75rem, 2.0vw, 2.4rem);
   --container-max: 1680px;
   --touch-target: 56px;
-}
-
-/* Adaptasi Kacamata Pintar (Optical Waveguide Black & High-Luminance HUD) */
-[data-hardware="smart-glasses"] {
-  --color-bg: #000000;
-  --color-surface: #050a14;
-  --color-surface-alt: #0d182c;
-  --color-primary: #38bdf8;
-  --color-primary-hover: #7dd3fc;
-  --color-secondary: #4ade80;
-  --color-accent: #fbbf24;
-  --color-text: #f8fafc;
-  --color-text-body: #e2e8f0;
-  --color-text-muted: #cbd5e1;
-  --color-on-primary: #000000;
-  --color-border: #38bdf8;
-  --text-base: 19px;
-  --text-h1: clamp(1.45rem, 2.2vw, 2.1rem);
-  --text-h2: clamp(1.25rem, 1.8vw, 1.65rem);
-  --leading-body: 1.55;
-  --shadow-card: none;
-  --touch-target: 52px;
 }

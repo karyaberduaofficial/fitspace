@@ -1,6 +1,6 @@
 /* ============================================================================
- * FitSpace PWA — Production Multi-Hardware Stylesheet
- * Responsive: Smartwatch (260px) -> Mobile -> Tablet (@container) -> Desktop -> TV -> Smart Glasses HUD
+ * FitSpace PWA — Production Multi-Device Stylesheet
+ * Responsive: Smartwatch (260px) -> Mobile -> Tablet (@container) -> Desktop -> Smart TV Kiosk
  * ============================================================================ */
 
 *,
@@ -121,23 +121,6 @@ textarea {
   color: var(--color-text);
   font-weight: 600;
   cursor: pointer;
-}
-
-.hud-launch-pill {
-  min-height: 38px;
-  padding: 0.35rem 0.9rem;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--hud-primary);
-  background: var(--hud-bg);
-  color: var(--hud-primary);
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.hud-launch-pill:hover {
-  background: var(--hud-surface-alt);
 }
 
 /* ---------- Sticky Header (Zero-Lag Static Surface) ---------- */
@@ -337,7 +320,7 @@ textarea {
 
 .pill-dark {
   background: var(--color-primary-hover);
-  color: var(--hud-primary);
+  color: var(--color-sky);
   border: 1px solid var(--color-primary-border);
 }
 
@@ -701,7 +684,7 @@ textarea {
 }
 
 .card-dark .price-tag {
-  color: var(--hud-primary);
+  color: var(--color-sky);
 }
 
 /* ---------- Catalog & Class Photo Cards ---------- */
@@ -1155,7 +1138,7 @@ textarea {
 .role-sidebar-head span {
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  color: var(--hud-primary);
+  color: var(--color-sky);
 }
 
 .sidebar-nav {
@@ -1334,7 +1317,7 @@ textarea {
   max-width: 380px;
   background: var(--color-primary);
   color: #ffffff;
-  border: 1px solid var(--hud-primary);
+  border: 1px solid var(--color-sky);
   border-radius: var(--radius-md);
   padding: 0.9rem 1.1rem;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
@@ -1454,7 +1437,7 @@ textarea {
   font-size: 0.76rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--hud-primary);
+  color: var(--color-sky);
   margin: 0 0 0.85rem;
 }
 
@@ -1489,7 +1472,7 @@ textarea {
 }
 
 .footer-list a:hover {
-  color: var(--hud-primary);
+  color: var(--color-sky);
 }
 
 .footer-bottom {
@@ -1511,96 +1494,8 @@ textarea {
 }
 
 .footer-legal a {
-  color: var(--hud-primary);
+  color: var(--color-sky);
   text-decoration: none;
-}
-
-/* ---------- Smart Glasses Optical HUD Overlay ([data-hardware="smart-glasses"]) ---------- */
-.hud-overlay {
-  display: none;
-}
-
-[data-hardware="smart-glasses"] body {
-  background: #000000;
-  color: #f8fafc;
-}
-
-[data-hardware="smart-glasses"] .site-header,
-[data-hardware="smart-glasses"] .site-footer,
-[data-hardware="smart-glasses"] .adaptive-toolbar {
-  display: none;
-}
-
-[data-hardware="smart-glasses"] .hud-overlay.is-active {
-  display: grid;
-  place-items: center;
-  position: fixed;
-  inset: 0;
-  z-index: 300;
-  background: #000000;
-  color: #f8fafc;
-  padding: clamp(1rem, 6vh, 3.25rem) clamp(1rem, 6vw, 4rem);
-  overflow-y: auto;
-}
-
-.hud-stage {
-  width: min(100%, 56ch);
-  background: #050a14;
-  border: 2.5px solid #38bdf8;
-  border-radius: 18px;
-  padding: 1.65rem;
-}
-
-.hud-top-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: #38bdf8;
-  margin-bottom: 0.75rem;
-}
-
-.hud-stage h2 {
-  font-family: var(--font-display);
-  font-size: clamp(1.35rem, 2.2vw, 1.85rem);
-  color: #ffffff;
-  margin: 0 0 0.65rem;
-}
-
-.hud-stage p {
-  color: #e2e8f0;
-  margin: 0 0 1rem;
-}
-
-.hud-status {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: #4ade80;
-}
-
-.hud-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.65rem;
-  margin-top: 1.1rem;
-}
-
-.hud-btn {
-  min-height: 52px;
-  padding: 0.65rem 1rem;
-  border-radius: 10px;
-  border: 2px solid #38bdf8;
-  background: #0d182c;
-  color: #f8fafc;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.hud-btn-primary {
-  background: #38bdf8;
-  color: #000000;
 }
 
 /* ---------- Responsive Breakpoints (Tablet, Mobile, Smartwatch, TV) ---------- */
@@ -1713,7 +1608,6 @@ textarea {
 @media print {
   .site-header,
   .adaptive-toolbar,
-  .hud-overlay,
   .role-sidebar,
   .cta-group,
   .nav-actions,
@@ -1981,7 +1875,7 @@ textarea {
   background: none;
   border: none;
   padding: 0;
-  color: var(--hud-primary);
+  color: var(--color-sky);
   font-weight: 600;
   font-size: 0.86rem;
   cursor: pointer;

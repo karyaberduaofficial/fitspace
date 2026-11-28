@@ -16,7 +16,7 @@ Platform ini menghubungkan kebutuhan pengelola studio, pelatih, member dewasa, s
 | **Booking, Membership & Reschedule** | Pemesanan kelas per sesi maupun paket membership, dukungan voucher promo, serta penyesuaian jadwal sesuai kebijakan studio. |
 | **Absensi & Evaluasi Perkembangan** | Pencatatan kehadiran kelas secara digital, distribusi materi latihan, penilaian perkembangan berkala, dan rapor peserta bagi orang tua/wali. |
 | **Transaksi & Pelaporan Lengkap** | Pemantauan transaksi, rekap aktivitas operasional, serta ekspor laporan siap cetak dan olah data dalam format **PDF**, **Excel (`.xlsx`)**, dan **Word (`.docx`)**. |
-| **Pengalaman Lintas Perangkat** | Antarmuka adaptif untuk smartphone, tablet, desktop, layar informasi studio, hingga perangkat pintar modern. |
+| **Pengalaman Lintas Perangkat** | Antarmuka adaptif untuk smartphone, tablet, desktop, hingga layar informasi studio. |
 
 ---
 

@@ -1,12 +1,12 @@
 // ============================================================================
-// FitSpace V9 — 100% 1:1 Live Web UI/UX, Vertical Role Dropdowns,
+// FitSpace V10 — 100% 1:1 Live Web UI/UX, Vertical Role Dropdowns,
 //               Circular Donut/Ring Charts, Exact Studio Backgrounds & Prototype
 // Target Organization: Karya Berdua Official
 // HIGHLIGHTS IN V9:
 // 1. REAL VERTICAL INTERACTIVE DROPDOWN OVERLAYS (ZERO horizontal role bars!):
 //    - Every single screen header has a clean "Pilih Peran ▾" / "Peran: ... ▾"
 //      dropdown button opening a floating Vertical Overlay Menu (TOP_RIGHT,
-//      CLOSE_ON_CLICK_OUTSIDE) with 1-click access to ALL 6 roles & HUD!
+//      CLOSE_ON_CLICK_OUTSIDE) with 1-click access to ALL 6 roles!
 //    - Register modal "Jenis Akun ▾" & Katalog "Semua Cabang ▾" also open real
 //      vertical dropdown overlays in Figma Present mode!
 // 2. REAL VECTOR SVG CIRCULAR / DONUT CHARTS (1:1 matching Live Web):
@@ -19,7 +19,6 @@
 //    - Membership: #F1F5F9 canvas + dual Cobalt/Cyan radial ambient glows + 6 plan photos.
 //    - Workspace Shell: bg-workspace-fitness.jpg + dark navy scrim + dual Cyan/Cobalt
 //      radial orbs + exact #0F172A -> #1D4ED8 Workspace Hero Banner + glass HUD button.
-//    - Smart Glasses HUD: True Optical Black #000000 (WCAG AAA > 14:1).
 // 4. EXACT NEW LIVE WEB WORKFLOW:
 //    - Admin centrally approves Accounts (Coach, Member 18+, Orang Tua), Class
 //      Selections (Bookings), and Membership Selections.
@@ -57,8 +56,8 @@ function b64ToBytes(b64) {
 const yieldUi = () => new Promise((r) => setTimeout(r, 15));
 
 async function run() {
-  const startToast = figma.notify("Membangun FitSpace V9 (48 layar + Dropdown Vertikal + Donut Chart + Background 1:1 Web)...", { timeout: 25000 });
-  console.log("[FitSpace V9] Memulai generate UI/UX 100% 1:1 web + vertical dropdowns + donut charts...");
+  const startToast = figma.notify("Membangun FitSpace V10 (47 frame + Dropdown Vertikal + Donut Chart + Background 1:1 Web)...", { timeout: 25000 });
+  console.log("[FitSpace V10] Memulai generate UI/UX 100% 1:1 web + vertical dropdowns + donut charts...");
 
   const avail = typeof figma.listAvailableFontsAsync === "function"
     ? await figma.listAvailableFontsAsync()
@@ -244,21 +243,16 @@ async function run() {
     "color/warning-bg": "#FFFBEB",
     "color/danger": "#B91C1C",
     "color/danger-bg": "#FEF2F2",
-    "hud/bg": "#000000",
-    "hud/surface": "#050A14",
-    "hud/surface-alt": "#0D182C",
-    "hud/primary": "#38BDF8",
-    "hud/secondary": "#4ADE80",
-    "hud/accent": "#FBBF24",
-    "hud/text": "#F8FAFC",
-    "hud/text-muted": "#CBD5E1",
+    "color/sky": "#38BDF8",
+    "color/emerald-glow": "#4ADE80",
+    "color/amber-glow": "#FBBF24",
   };
 
   // Setup 3 Starter-plan pages (dynamic-page safe!)
   const pageNames = [
-    "01 · FitSpace V9 — Full Web App, Dropdown & Prototype (40 Frame)",
-    "02 · FitSpace V9 — Design System, Charts, Dropdown & Backgrounds",
-    "03 · FitSpace V9 — Multi-Hardware (Mobile, Watch, TV & HUD)",
+    "01 · FitSpace V10 — Full Web App, Dropdown & Prototype (39 Frame)",
+    "02 · FitSpace V10 — Design System, Charts, Dropdown & Backgrounds",
+    "03 · FitSpace V10 — Multi-Device (Mobile, Smartwatch, Tablet & TV)",
   ];
   while (figma.root.children.length < 3) figma.createPage();
   const pages = figma.root.children.slice(0, 3);
@@ -305,7 +299,6 @@ async function run() {
     ["FitSpace/Label-Button", F.bodySemi, 13, 18, 0],
     ["FitSpace/Mono-KPI", F.monoBold, 23, 29, -0.5],
     ["FitSpace/Mono-Badge", F.monoBold, 10.5, 14.5, 0.35],
-    ["FitSpace/HUD-Title", F.dispBold, 24, 32, -0.2],
     ["FitSpace/TV-Title", F.dispExtra, 34, 42, -0.5],
     ["FitSpace/TV-Row", F.dispBold, 20, 26, -0.2],
   ];
@@ -755,7 +748,7 @@ async function run() {
       photo: photoKey, photoMode,
       align: "SPACE_BETWEEN", cross: photoMode === "planCard" ? "MIN" : "MAX", clip: true,
     });
-    pill(cover, badgeText, featured ? "hud/primary" : (photoMode === "planCard" ? "color/surface" : "color/secondary"), featured || photoMode === "planCard" ? "color/primary" : "color/on-dark");
+    pill(cover, badgeText, featured ? "color/sky" : (photoMode === "planCard" ? "color/surface" : "color/secondary"), featured || photoMode === "planCard" ? "color/primary" : "color/on-dark");
     if (rightMetaText) {
       if (photoMode === "planCard") {
         pill(cover, rightMetaText, "color/primary", "color/on-dark", "color/primary-border");
@@ -790,7 +783,7 @@ async function run() {
       btnBox.appendChild(icon);
       try { icon.layoutSizingHorizontal = "FIXED"; icon.layoutSizingVertical = "FIXED"; } catch (_) {}
     } catch (_) {
-      txt(btnBox, revealed ? "HIDE" : "SHOW", "FitSpace/Mono-Badge", darkBg ? "hud/primary" : "color/secondary");
+      txt(btnBox, revealed ? "HIDE" : "SHOW", "FitSpace/Mono-Badge", darkBg ? "color/sky" : "color/secondary");
     }
     return btnBox;
   }
@@ -840,8 +833,8 @@ async function run() {
       const fallback = figma.createRectangle();
       fallback.resize(size, size);
       fallback.cornerRadius = 12;
-      bindFill(fallback, dark ? "hud/surface" : "color/surface");
-      bindStroke(fallback, dark ? "hud/primary" : "color/primary", 2);
+      bindFill(fallback, dark ? "color/primary" : "color/surface");
+      bindStroke(fallback, dark ? "color/sky" : "color/primary", 2);
       return fallback;
     }
   }
@@ -858,7 +851,7 @@ async function run() {
     const card = box(parent, "VERTICAL", { w: width, p: 22, r: 16, gap: 10, fill: "color/surface", stroke: "color/border", shadow: true });
     const head = box(card, "HORIZONTAL", { w: width - 44, px: 14, py: 9, r: 10, fill: "color/primary", align: "SPACE_BETWEEN", cross: "CENTER" });
     txt(head, "JENIS LAPORAN", "FitSpace/Mono-Badge", "color/on-dark");
-    txt(head, "FORMAT UNDUH (PDF · EXCEL .XLSX · WORD .DOCX)", "FitSpace/Mono-Badge", "hud/primary");
+    txt(head, "FORMAT UNDUH (PDF · EXCEL .XLSX · WORD .DOCX)", "FitSpace/Mono-Badge", "color/sky");
     for (const [title, sub] of items) {
       splitRow(card, title, sub, (r) => {
         btn(r, "PDF", "color/primary", "color/on-dark", { px: 11, py: 7, r: 8, style: "FitSpace/Mono-Badge" });
@@ -914,7 +907,7 @@ async function run() {
     wrapTxt(c1, "Platform manajemen fitness center terintegrasi untuk pengelolaan kelas dinamis, jadwal studio real-time, pembayaran digital, absensi cepat, serta pemantauan perkembangan latihan peserta.", "FitSpace/Body-Small", "color/on-dark-body");
 
     const c2 = box(cols, "VERTICAL", { w: 224, gap: 7 });
-    txt(c2, "FITUR PLATFORM", "FitSpace/Mono-Badge", "hud/primary");
+    txt(c2, "FITUR PLATFORM", "FitSpace/Mono-Badge", "color/sky");
     for (const [label, tk] of [
       ["Katalog Kelas Dinamis", P.catalog],
       ["Jadwal Studio Real-Time", P.home],
@@ -923,26 +916,26 @@ async function run() {
       ["Portal Login Admin Khusus", P.mAdminLogin],
     ]) {
       const it = box(c2, "HORIZONTAL", { py: 2, to: tk });
-      txt(it, label, "FitSpace/Body-Small", label.includes("Admin") ? "hud/primary" : "color/on-dark-body");
+      txt(it, label, "FitSpace/Body-Small", label.includes("Admin") ? "color/sky" : "color/on-dark-body");
     }
 
     const c3 = box(cols, "VERTICAL", { w: 310, gap: 7 });
-    txt(c3, "CABANG & ALAMAT RESMI", "FitSpace/Mono-Badge", "hud/primary");
+    txt(c3, "CABANG & ALAMAT RESMI", "FitSpace/Mono-Badge", "color/sky");
     wrapTxt(c3, "Jakarta Selatan (Pusat): Jl. Kemang Raya No. 88, Kemang, Jakarta Selatan 12730", "FitSpace/Body-Small", "color/on-dark-body");
     wrapTxt(c3, "Bandung (Cabang): Jl. Ir. H. Juanda No. 142, Dago, Kota Bandung 40132", "FitSpace/Body-Small", "color/on-dark-body");
     wrapTxt(c3, "Jam Layanan: Senin – Minggu · 06:00 – 21:00 WIB", "FitSpace/Body-Small", "color/on-dark-muted");
 
     const c4 = box(cols, "VERTICAL", { w: 250, gap: 7 });
-    txt(c4, "KONTAK & MEDIA SOSIAL", "FitSpace/Mono-Badge", "hud/primary");
+    txt(c4, "KONTAK & MEDIA SOSIAL", "FitSpace/Mono-Badge", "color/sky");
     wrapTxt(c4, "Email: hello@fitspace.id", "FitSpace/Body-Small", "color/on-dark-body");
     wrapTxt(c4, "Telp / WA Resmi: (021) 5088-4200", "FitSpace/Body-Small", "color/on-dark-body");
-    wrapTxt(c4, "Instagram: @fitspace.id · TikTok: @fitspace.id", "FitSpace/Body-Small", "hud/primary");
+    wrapTxt(c4, "Instagram: @fitspace.id · TikTok: @fitspace.id", "FitSpace/Body-Small", "color/sky");
     wrapTxt(c4, "YouTube: FitSpace Official · LinkedIn: FitSpace Indonesia", "FitSpace/Body-Small", "color/on-dark-muted");
 
     divider(f, "color/primary-border", 1312);
     const bot = box(f, "HORIZONTAL", { w: 1312, align: "SPACE_BETWEEN", cross: "CENTER", gap: 16 });
     txt(bot, "© 2026 FitSpace. Seluruh hak cipta dilindungi.", "FitSpace/Body-Small", "color/on-dark-muted");
-    pill(bot, "Powered by Karya Berdua Official", "color/primary-elev", "hud/primary", "color/primary-border");
+    pill(bot, "Powered by Karya Berdua Official", "color/primary-elev", "color/sky", "color/primary-border");
   }
 
   function makeScreen(page, name, x, y, w = 1440) {
@@ -1000,8 +993,8 @@ async function run() {
     mDash: "mDash", mBookings: "mBookings", mMem: "mMem", mProg: "mProg", mIssues: "mIssues",
     // Lane 6: Orang Tua / Wali <18 (ALL 5 Tabs!)
     gDash: "gDash", gProg: "gProg", gBookings: "gBookings", gMem: "gMem", gIssues: "gIssues",
-    // Lane 7: Akun Tamu (2 Tabs) + Smart Glasses Optical HUD Overlay
-    uOverview: "uOverview", uUpgrade: "uUpgrade", hudOverlay: "hudOverlay",
+    // Lane 7: Akun Tamu (2 Tabs — Pratinjau & Upgrade)
+    uOverview: "uOverview", uUpgrade: "uUpgrade",
   };
 
   const COL = 1600;
@@ -1028,8 +1021,7 @@ async function run() {
     ["Member 18+ (5 Tab)", "Booking, Membership, QR, Notif Jadwal & Laporan", "18+", "color/success-bg", "color/success", P.mDash],
     ["Orang Tua / Wali (5 Tab)", "Profil Anak <18, Rapor PDF/Word & Notif Jadwal", "WALI", "color/accent-bg", "color/accent", P.gDash],
     ["Akun Tamu (2 Tab)", "Pratinjau Terbatas & Gate Upgrade Akun", "TAMU", "color/warning-bg", "color/warning", P.uOverview],
-    ["Portal Login Admin Khusus", "Jalur masuk eksklusif Administrator FitSpace", "LOGIN", "color/primary-elev", "hud/primary", P.mAdminLogin],
-    ["Mode Kacamata Pintar (HUD)", "Optical Black #000000 · WCAG AAA > 14:1", "HUD", "hud/bg", "hud/primary", P.hudOverlay],
+    ["Portal Login Admin Khusus", "Jalur masuk eksklusif Administrator FitSpace", "LOGIN", "color/primary-elev", "color/sky", P.mAdminLogin],
   ]) {
     splitRow(ovRole, title, sub, (r) => pill(r, badge, bg, fg), {
       w: 328, px: 12, py: 9, r: 10, fill: "color/bg", stroke: "color/border", rightW: 78, to: dest,
@@ -1179,19 +1171,18 @@ async function run() {
     // 2. Exact Live Web Workspace Shell (bg-workspace-fitness.jpg + dark navy scrim + dual Cyan/Cobalt ambient orbs!)
     const wsWrap = box(scr, "VERTICAL", { w: 1440, px: 44, py: 26, gap: 22, photo: "workspace", photoMode: "workspaceDark", clip: true });
 
-    // Exact .workspace-hero-banner: linear-gradient(125deg, #0f172a 0%, #1d4ed8 100%) + glass HUD button!
+    // Exact .workspace-hero-banner: linear-gradient(125deg, #0f172a 0%, #1d4ed8 100%)
     const wHero = box(wsWrap, "HORIZONTAL", { w: 1352, px: 28, py: 24, r: 18, gap: 20, grad: ["#0F172A", "#1D4ED8"], stroke: "color/primary-border", align: "SPACE_BETWEEN", cross: "CENTER", shadow: true });
-    const wHeroL = box(wHero, "VERTICAL", { w: 940, gap: 6 });
-    pill(wHeroL, roleMeta.badge, "color/primary", "hud/primary", "color/primary-border");
-    wrapTxt(wHeroL, roleMeta.title, "FitSpace/Heading-H2", "color/on-dark");
-    wrapTxt(wHeroL, roleMeta.sub, "FitSpace/Body-Small", "color/on-dark-body");
-    btn(wHero, "Mode Kacamata Pintar (G)", null, "color/on-dark", { px: 16, py: 10, r: 10, glass: true, style: "FitSpace/Body-Small", to: P.hudOverlay });
+    const wHeroL = box(wHero, "VERTICAL", { w: 1296, gap: 6 });
+    pill(wHeroL, roleMeta.badge, "color/primary", "color/sky", "color/primary-border");
+    wrapTxt(wHeroL, roleMeta.title, "FitSpace/Heading-H2", "color/on-dark", 1296);
+    wrapTxt(wHeroL, roleMeta.sub, "FitSpace/Body-Small", "color/on-dark-body", 1296);
 
     const body = box(wsWrap, "HORIZONTAL", { w: 1352, gap: 22, cross: "MIN" });
     const sb = box(body, "VERTICAL", { name: "Role Sidebar", w: 284, p: 18, r: 18, gap: 6, fill: "color/primary", stroke: "color/primary-border", shadow: true });
     const sbHead = box(sb, "VERTICAL", { w: 248, pb: 10, gap: 3 });
     wrapTxt(sbHead, sideUserMap[activeRole][0], "FitSpace/Label-Button", "color/on-dark", 248);
-    txt(sbHead, sideUserMap[activeRole][1], "FitSpace/Mono-Badge", "hud/primary");
+    txt(sbHead, sideUserMap[activeRole][1], "FitSpace/Mono-Badge", "color/sky");
     divider(sb, "color/primary-border", 248);
 
     for (const [idx, [lbl, toKey]] of menuItems.entries()) {
@@ -1303,7 +1294,7 @@ async function run() {
       stroke: isAdm ? "color/secondary" : "color/border",
       shadow: true,
     });
-    pill(rc, tg, isAdm ? "color/primary-elev" : "color/secondary-bg", isAdm ? "hud/primary" : "color/secondary");
+    pill(rc, tg, isAdm ? "color/primary-elev" : "color/secondary-bg", isAdm ? "color/sky" : "color/secondary");
     wrapTxt(rc, ti, "FitSpace/Heading-H3", isAdm ? "color/on-dark" : "color/primary");
     wrapTxt(rc, td, "FitSpace/Body-Small", isAdm ? "color/on-dark-body" : "color/text-body");
     btn(rc, cta, isAdm ? "color/secondary" : "color/primary", "color/on-dark", { py: 9, full: true, style: "FitSpace/Body-Small", to: toK });
@@ -1394,7 +1385,7 @@ async function run() {
         stroke: isDark ? "color/primary-border" : "color/border",
       });
       wrapTxt(priceBox, pp, "FitSpace/Mono-KPI", isDark ? "color/on-dark" : "color/primary");
-      wrapTxt(priceBox, pm, "FitSpace/Mono-Badge", isDark ? "hud/primary" : "color/secondary");
+      wrapTxt(priceBox, pm, "FitSpace/Mono-Badge", isDark ? "color/sky" : "color/secondary");
       for (const ft of feats) wrapTxt(pb, ft, "FitSpace/Body-Small", isDark ? "color/on-dark-body" : "color/text-body");
       btn(pb, "Pilih Paket Ini →", isDark ? "color/secondary" : "color/primary", "color/on-dark", { py: 11, full: true, to: P.mMem });
     }
@@ -1473,7 +1464,7 @@ async function run() {
     btn(tabs, "Member · Orang Tua · Coach", "color/surface-alt", "color/text-muted", { w: 308, py: 9, r: 8, style: "FitSpace/Body-Small", to: P.mLogin });
     btn(tabs, "Portal Admin Khusus", "color/primary", "color/on-dark", { w: 302, py: 9, r: 8, style: "FitSpace/Body-Small" });
     const notice = box(c, "VERTICAL", { w, p: 16, r: 14, gap: 6, grad: ["#0B1120", "#172554"], stroke: "color/secondary", sw: 1.5 });
-    pill(notice, "AKSES EKSKLUSIF ADMINISTRATOR", "color/primary-elev", "hud/primary", "color/primary-border");
+    pill(notice, "AKSES EKSKLUSIF ADMINISTRATOR", "color/primary-elev", "color/sky", "color/primary-border");
     wrapTxt(notice, "Hanya akun Admin resmi yang dapat masuk untuk menyetujui akun, kelas & membership Member/Orang Tua, ACC reschedule jadwal Coach, serta menangani masalah.", "FitSpace/Body-Small", "color/on-dark-body");
     inputField(c, w, "Email Administrator", "admin@domain-anda.com", { focus: true });
     passwordField(c, w, "Kata Sandi Admin (Ikon Mata Aktif — Terlihat)", "ContohKataSandi", true, false, P.mLogin);
@@ -1735,7 +1726,7 @@ async function run() {
   // 18 · ADMIN (8/9) REPORTING CENTER — ALL 11 REPORTS (PDF, EXCEL, WORD)
   const a8 = buildRoleShell(P.aReports, "18 · ADMIN (8/9) — REPORTING CENTER 11 LAPORAN (PDF · EXCEL · WORD)", "18 · Admin — Reporting Center 11 Laporan", ADMIN_META, "admin", ADMIN_MENU, 7, 2, 2);
   const a8Info = box(a8.main, "VERTICAL", { w: 1046, p: 18, r: 16, gap: 6, grad: ["#0B1120", "#172554"], stroke: "color/secondary" });
-  pill(a8Info, "EXECUTIVE EXPORT ENGINE · ZERO SPLIT-PANE · RUPIAH FORMAT · LANDSCAPE", "color/primary-elev", "hud/primary", "color/primary-border");
+  pill(a8Info, "EXECUTIVE EXPORT ENGINE · ZERO SPLIT-PANE · RUPIAH FORMAT · LANDSCAPE", "color/primary-elev", "color/sky", "color/primary-border");
   wrapTxt(a8Info, "Reporting Center — 11 Laporan Eksekutif Siap Cetak & Olah Data", "FitSpace/Heading-H3", "color/on-dark");
   wrapTxt(a8Info, "PDF berlogo FitSpace, Excel (.xlsx) dengan kartu KPI simetris, format Rupiah & baris total rapi, serta Word (.docx) siap edit.", "FitSpace/Body-Small", "color/on-dark-body");
   reportExportList(a8.main, 1046, [
@@ -1788,11 +1779,10 @@ async function run() {
 
   // 20 · COACH (1/5) JADWAL RESMI, SCAN QR & CIRCULAR ATTENDANCE RING (FLOW 3 START)
   const c1 = buildRoleShell(P.cDash, "20 · COACH (1/5) — JADWAL RESMI, SCAN QR & RING KEHADIRAN (FLOW START)", "20 · Coach — Jadwal & Scan QR", COACH_META, "coach", COACH_MENU, 0, 0, 3);
-  splitRow(c1.main, "1 Pengajuan Reschedule Jadwal Menunggu Persetujuan Admin", "Begitu di-ACC Admin, jadwal baru akan otomatis diteruskan ke seluruh Member & Orang Tua terkait.", (r) => btn(r, "Pantau Status Reschedule →", "color/secondary", "color/on-dark", { px: 13, py: 8, r: 8, style: "FitSpace/Body-Small", to: P.cResch }), { w: 1046, fill: "color/warning-bg", stroke: "color/warning", titleColor: "color/warning", rightW: 215 });
 
   const c1Top = box(c1.main, "HORIZONTAL", { w: 1046, gap: 18, cross: "MIN" });
   const c1Qr = box(c1Top, "VERTICAL", { w: 560, p: 22, r: 16, gap: 12, grad: ["#0B1120", "#172554"], stroke: "color/secondary", shadow: true });
-  pill(c1Qr, "PEMINDAI QR KEHADIRAN SEKALI PAKAI", "color/primary-elev", "hud/primary", "color/primary-border");
+  pill(c1Qr, "PEMINDAI QR KEHADIRAN SEKALI PAKAI", "color/primary-elev", "color/sky", "color/primary-border");
   wrapTxt(c1Qr, "Validasi QR Code Kehadiran Peserta", "FitSpace/Heading-H3", "color/on-dark");
   const qrRow = box(c1Qr, "HORIZONTAL", { w: 516, gap: 10, cross: "MAX" });
   inputField(qrRow, 210, "Kode QR Booking", "FS-QR-8821", { dark: true, focus: true });
@@ -1928,9 +1918,9 @@ async function run() {
   const m1RingRow = box(m1Mem, "HORIZONTAL", { w: 465, gap: 16, cross: "CENTER" });
   ringChartVisual(m1RingRow, 65, "Sisa Kuota", true, 106);
   const m1RingMeta = box(m1RingRow, "VERTICAL", { w: 342, gap: 5 });
-  wrapTxt(m1RingMeta, "Sisa 13 / 20 Sesi", "FitSpace/Mono-KPI", "hud/primary", 342);
+  wrapTxt(m1RingMeta, "Sisa 13 / 20 Sesi", "FitSpace/Mono-KPI", "color/sky", 342);
   wrapTxt(m1RingMeta, "Berlaku hingga 19 Des 2026 · Disetujui & diaktifkan Admin FitSpace.", "FitSpace/Body-Small", "color/on-dark-body", 342);
-  progressBar(m1Mem, 0.65, "hud/secondary", "color/primary-elev", 9, 465);
+  progressBar(m1Mem, 0.65, "color/emerald-glow", "color/primary-elev", 9, 465);
   btn(m1Mem, "Kelola Membership & Transaksi →", "color/secondary", "color/on-dark", { py: 10, full: true, style: "FitSpace/Body-Small", to: P.mMem });
 
   const m1Qr = box(m1Row, "VERTICAL", { w: 513, p: 24, r: 18, gap: 14, fill: "color/surface", stroke: "color/border", shadow: true });
@@ -2153,14 +2143,14 @@ async function run() {
   await yieldUi();
 
   // ============================================================================
-  // SWIMLANE 7 (ROW 6): AKUN TAMU (2 TABS) + SMART GLASSES OPTICAL HUD OVERLAY
+  // SWIMLANE 7 (ROW 6): AKUN TAMU (2 TABS — PRATINJAU & UPGRADE)
   // ============================================================================
   const GUEST_META = {
     badge: "MODE AKUN TAMU (AKSES TERBATAS)",
     title: "Halo, Pengunjung Tamu",
     sub: "Anda dapat menjelajahi katalog kelas, jadwal live, dan 6 paket membership. Login Member (18+) atau Orang Tua / Wali untuk fitur penuh.",
   };
-  makeLaneBanner(pages[0], "SWIMLANE 7 · AKUN TAMU (2 TAB) & OVERLAY SMART GLASSES OPTICAL HUD", "Pratinjau Akun Tamu · Upgrade ke Member 18+ / Orang Tua · Smart Glasses Optical Black HUD (#000000 WCAG AAA > 14:1)", 6 * ROW, "color/warning");
+  makeLaneBanner(pages[0], "SWIMLANE 7 · AKUN TAMU (2 TAB — PRATINJAU & UPGRADE)", "Pratinjau Akun Tamu (Akses Terbatas) · Upgrade ke Akun Member 18+, Orang Tua / Wali, atau Pengajuan Coach", 6 * ROW, "color/warning");
 
   // 35 · AKUN TAMU (1/2) PRATINJAU AKUN TAMU (FLOW 6 START)
   const u1 = buildRoleShell(P.uOverview, "35 · AKUN TAMU (1/2) — PRATINJAU AKUN TAMU (FLOW START)", "35 · Akun Tamu — Pratinjau Terbatas", GUEST_META, "guest", GUEST_MENU, 0, 0, 6);
@@ -2186,7 +2176,7 @@ async function run() {
   const uCtaR = box(uCta, "HORIZONTAL", { gap: 10 });
   btn(uCtaR, "Daftar Member (18+)", "color/secondary", "color/on-dark", { px: 14, py: 10, style: "FitSpace/Body-Small", to: P.mRegister });
   btn(uCtaR, "Daftar Orang Tua", "color/surface", "color/primary", { px: 14, py: 10, style: "FitSpace/Body-Small", to: P.mRegister });
-  btn(uCtaR, "Uji Gate Tamu", "color/primary-elev", "hud/primary", { px: 14, py: 10, stroke: "hud/primary", style: "FitSpace/Body-Small", to: P.mGuestGate });
+  btn(uCtaR, "Uji Gate Tamu", "color/primary-elev", "color/sky", { px: 14, py: 10, stroke: "color/sky", style: "FitSpace/Body-Small", to: P.mGuestGate });
   buildRichFooter(u1.scr, P);
 
   // 36 · AKUN TAMU (2/2) UPGRADE KE MEMBER / ORANG TUA
@@ -2205,26 +2195,6 @@ async function run() {
   }
   buildRichFooter(u2.scr, P);
 
-  // 37 · OVERLAY — SMART GLASSES OPTICAL BLACK HUD (#000000 WCAG AAA)
-  makeTag(pages[0], "37 · OVERLAY — SMART GLASSES OPTICAL BLACK HUD (#000000 · WCAG AAA > 14:1)", 2 * COL, 6 * ROW, "color/primary");
-  const hudScr = box(null, "VERTICAL", { name: "37 · Overlay — Smart Glasses Optical HUD", w: 1440, h: 900, px: 160, py: 120, r: 20, fill: "hud/bg", stroke: "hud/primary", sw: 2.5, align: "CENTER", cross: "CENTER" });
-  hudScr.x = 2 * COL; hudScr.y = 6 * ROW; pages[0].appendChild(hudScr); S[P.hudOverlay] = hudScr;
-  const hudStage = box(hudScr, "VERTICAL", { w: 860, p: 40, r: 22, gap: 18, fill: "hud/surface", stroke: "hud/primary", sw: 2.5 });
-  const hMeta = box(hudStage, "HORIZONTAL", { w: 780, align: "SPACE_BETWEEN", cross: "CENTER" });
-  txt(hMeta, "OPTICAL HUD 1 / 4 · FITSPACE", "FitSpace/Mono-Badge", "hud/primary");
-  txt(hMeta, "WCAG AAA > 14:1 · PURE OPTICAL BLACK #000000", "FitSpace/Mono-Badge", "hud/secondary");
-  wrapTxt(hudStage, "Reformer Pilates (Rab, 26 Nov, 14:00 WIB)", "FitSpace/HUD-Title", "hud/text");
-  wrapTxt(hudStage, "Coach Nadia Putri · Studio A (FitSpace Jakarta Selatan) · Peserta 11/14. Navigasi hands-free dengan tombol panah kiri/kanan, Read-Aloud TTS, dan perintah suara.", "FitSpace/Body-Lead", "hud/text-muted");
-  wrapTxt(hudStage, "Siap · Shortcut: Panah Kiri/Kanan, G (Toggle HUD), Esc (Keluar).", "FitSpace/Body-Small", "hud/accent");
-  const hBtns1 = box(hudStage, "HORIZONTAL", { w: 780, gap: 12 });
-  btn(hBtns1, "← Sebelumnya", "hud/surface-alt", "hud/text", { w: 185, py: 14, stroke: "hud/primary", sw: 2 });
-  btn(hBtns1, "Berikutnya →", "hud/primary", "color/primary", { w: 186, py: 14 });
-  btn(hBtns1, "Bacakan (TTS)", "hud/surface-alt", "hud/text", { w: 186, py: 14, stroke: "hud/primary", sw: 2 });
-  btn(hBtns1, "Perintah Suara", "hud/surface-alt", "hud/secondary", { w: 187, py: 14, stroke: "hud/secondary", sw: 2 });
-  const hBtns2 = box(hudStage, "HORIZONTAL", { w: 780, gap: 12 });
-  btn(hBtns2, "Keluar HUD → Dashboard Admin (Esc)", "hud/surface-alt", "hud/text", { w: 384, py: 13, stroke: "hud/primary", sw: 1.5, to: P.aDash });
-  btn(hBtns2, "Keluar HUD → Beranda Portal", "hud/surface-alt", "hud/text-muted", { w: 384, py: 13, stroke: "hud/primary", sw: 1.5, to: P.home });
-
   await flushPageWork();
   try {
     pages[0].flowStartingPoints = [
@@ -2233,7 +2203,7 @@ async function run() {
       { nodeId: c1.scr.id, name: "3 · Coach Workspace (5 Tab: Jadwal Resmi, Ring QR & Ajukan Reschedule)" },
       { nodeId: m1.scr.id, name: "4 · Member 18+ Workspace (5 Tab: Ring Kuota & Notif Jadwal Admin)" },
       { nodeId: g1.scr.id, name: "5 · Orang Tua / Wali Workspace (5 Tab: Profil Anak, Ring Skor & Notif)" },
-      { nodeId: u1.scr.id, name: "6 · Akun Tamu & Smart Glasses Optical HUD" },
+      { nodeId: u1.scr.id, name: "6 · Akun Tamu (Pratinjau Terbatas & Upgrade)" },
     ];
   } catch (_) {}
 
@@ -2242,13 +2212,13 @@ async function run() {
   // ============================================================================
   await figma.setCurrentPageAsync(pages[1]);
   makeTag(pages[1], "DS · FITSPACE V9 — SISTEM DESAIN, CHARTS, DROPDOWN VERTIKAL & BACKGROUNDS", 0, 0);
-  const ds = makeScreen(pages[1], "FitSpace V9 — Design System, Charts, Dropdown & Backgrounds", 0, 0, 1440);
+  const ds = makeScreen(pages[1], "FitSpace V10 — Design System, Charts, Dropdown & Backgrounds", 0, 0, 1440);
   const dsPad = box(ds, "VERTICAL", { w: 1440, p: 48, gap: 26, fill: "color/bg" });
 
   const dsHero = box(dsPad, "VERTICAL", { w: 1344, px: 40, py: 32, r: 20, gap: 10, photo: "workspace", photoMode: "workspaceDark", clip: true });
   pill(dsHero, "FITSPACE V9 · 100% 1:1 LIVE WEB DESIGN SYSTEM", "color/secondary", "color/on-dark");
-  wrapTxt(dsHero, "FitSpace V9 — Sistem Desain, Grafik Lingkaran, Dropdown Vertikal & Background", "FitSpace/Display-H1", "color/on-dark");
-  wrapTxt(dsHero, "40 frame Desktop + 3 Vertical Overlay Dropdowns di Page 1 (6 Prototype Flow), 7 layar Multi-Hardware di Page 3, 14 foto studio nyata, dan background berlapis 1:1 Web.", "FitSpace/Body-Lead", "color/on-dark-body");
+  wrapTxt(dsHero, "FitSpace V10 — Sistem Desain, Grafik Lingkaran, Dropdown Vertikal & Background", "FitSpace/Display-H1", "color/on-dark");
+  wrapTxt(dsHero, "39 frame Desktop + 3 Vertical Overlay Dropdowns di Page 1 (6 Prototype Flow), 7 layar Multi-Device di Page 3 (Mobile, Smartwatch, Tablet & TV), 14 foto studio nyata, dan background berlapis 1:1 Web.", "FitSpace/Body-Lead", "color/on-dark-body");
 
   wrapTxt(dsPad, "1. Background & Ambient Glow Berlapis (100% Identik dengan Web Asli)", "FitSpace/Heading-H2", "color/primary");
   const bgRow = box(dsPad, "HORIZONTAL", { w: 1344, gap: 16 });
@@ -2257,13 +2227,13 @@ async function run() {
     ["Hero Studio Aurora", "bg-hero-studio.jpg + light scrim + Cobalt/Sky radial glows", "hero", "heroLight", false],
     ["Membership Ambient", "#F1F5F9 + Cobalt (12%,18%) & Cyan (88%,82%) radial glow", null, "membershipAmbient", false],
     ["Workspace Dark Orbs", "bg-workspace-fitness.jpg + Navy scrim + Cyan/Cobalt orbs", "workspace", "workspaceDark", true],
-    ["Smart Glasses HUD", "True Optical Black #000000 · WCAG AAA > 14:1", null, null, true],
+    ["Executive Dark Card", "Gradient #0B1120 → #172554 · Kartu Membership Pro & Banner", null, null, true],
   ]) {
     const bc = box(bgRow, "VERTICAL", {
       w: bgW, h: 170, p: 18, r: 16, gap: 8,
       photo: pKey, photoMode: pMode || undefined,
-      fill: !pKey && !pMode ? "hud/bg" : undefined,
-      stroke: darkTxt ? "hud/primary" : "color/border-strong", shadow: true, align: "MAX", clip: true,
+      fill: !pKey && !pMode ? "color/primary" : undefined,
+      stroke: darkTxt ? "color/sky" : "color/border-strong", shadow: true, align: "MAX", clip: true,
     });
     wrapTxt(bc, ti, "FitSpace/Heading-H3", darkTxt ? "color/on-dark" : "color/primary");
     wrapTxt(bc, sub, "FitSpace/Body-Small", darkTxt ? "color/on-dark-body" : "color/text-body");
@@ -2303,10 +2273,10 @@ async function run() {
     splitRow(visDrop, nm, null, (r) => pill(r, bdg, "color/secondary-bg", "color/secondary"), { w: 344, px: 10, py: 7, r: 8, rightW: 78 });
   }
 
-  wrapTxt(dsPad, "3. Palet Warna Semantik — Corporate WCAG AA/AAA & Smart Glasses Optical HUD", "FitSpace/Heading-H2", "color/primary");
+  wrapTxt(dsPad, "3. Palet Warna Semantik — Corporate Multi-Device WCAG AA/AAA", "FitSpace/Heading-H2", "color/primary");
   for (const rItems of [
     [["Executive Navy", "#0B1120", "18.8:1 AAA", "color/primary"], ["Cobalt Action", "#1D4ED8", "6.7:1 AA+", "color/secondary"], ["Ocean Accent", "#0369A1", "5.9:1 AA+", "color/accent"], ["Pure Surface", "#FFFFFF", "Base Card", "color/surface"], ["Studio Canvas", "#F8FAFC", "Page Bg", "color/bg"]],
-    [["Emerald Verified", "#15803D", "5.1:1 AA", "color/success"], ["Amber Pending", "#B45309", "5.0:1 AA", "color/warning"], ["Crimson Alert", "#B91C1C", "6.4:1 AA+", "color/danger"], ["HUD Optical Black", "#000000", "Waveguide", "hud/bg"], ["HUD Cyan Glow", "#38BDF8", "10.6:1 AAA", "hud/primary"]],
+    [["Emerald Verified", "#15803D", "5.1:1 AA", "color/success"], ["Amber Pending", "#B45309", "5.0:1 AA", "color/warning"], ["Crimson Alert", "#B91C1C", "6.4:1 AA+", "color/danger"], ["Sky Highlight", "#38BDF8", "Dark Accent", "color/sky"], ["Emerald Glow", "#4ADE80", "Active Ring", "color/emerald-glow"]],
   ]) {
     const sr = box(dsPad, "HORIZONTAL", { w: 1344, gap: 16 });
     const cw = Math.floor((1344 - 64) / 5);
@@ -2331,7 +2301,7 @@ async function run() {
   pill(pwC2, "STATE 2 · TERLIHAT (EYE OFF · AKTIF)", "color/secondary-bg", "color/secondary");
   passwordField(pwC2, 394, "Kata Sandi (Tanda Mata Diklik)", "ContohKataSandi", true, false);
   const pwC3 = box(pwSpecRow, "VERTICAL", { w: 436, p: 20, r: 16, gap: 10, grad: ["#0B1120", "#172554"], stroke: "color/secondary", shadow: true });
-  pill(pwC3, "STATE 3 · PORTAL ADMIN KHUSUS (DARK)", "color/primary-elev", "hud/primary", "color/primary-border");
+  pill(pwC3, "STATE 3 · PORTAL ADMIN KHUSUS (DARK)", "color/primary-elev", "color/sky", "color/primary-border");
   passwordField(pwC3, 396, "Kata Sandi Administrator", "ContohKataSandi", true, true);
   await flushPageWork();
 
@@ -2339,7 +2309,7 @@ async function run() {
   // PAGE 3: MULTI-HARDWARE RESPONSIVE & CONNECTED PROTOTYPE (7 LAYAR)
   // ============================================================================
   await figma.setCurrentPageAsync(pages[2]);
-  const P3 = { mHome: "p3_mhome", mCat: "p3_mcat", mLogin: "p3_mlogin", mQr: "p3_mqr", watch: "p3_watch", tv: "p3_tv", hud: "p3_hud" };
+  const P3 = { mHome: "p3_mhome", mCat: "p3_mcat", mLogin: "p3_mlogin", mQr: "p3_mqr", watch: "p3_watch", tablet: "p3_tablet", tv: "p3_tv" };
 
   // M1 · MOBILE HOME (390px)
   makeTag(pages[2], "M1 · MOBILE PWA — BERANDA & JADWAL LIVE (390PX)", 0, 0);
@@ -2355,7 +2325,7 @@ async function run() {
   btn(mb1, "Jelajahi Katalog Kelas →", "color/secondary", "color/on-dark", { py: 12, full: true, to: P3.mCat });
   btn(mb1, "Lihat Tiket QR & Ring Kuota →", "color/primary", "color/on-dark", { py: 11, full: true, to: P3.mQr });
   const mLive = box(mob1, "VERTICAL", { w: 390, p: 18, gap: 10, fill: "color/primary" });
-  txt(mLive, "● JADWAL LIVE HARI INI", "FitSpace/Mono-Badge", "hud/secondary");
+  txt(mLive, "● JADWAL LIVE HARI INI", "FitSpace/Mono-Badge", "color/emerald-glow");
   splitRow(mLive, "Reformer Pilates · 14:00", "Studio A · Coach Nadia · Sisa 13", (r) => pill(r, "BOOK", "color/secondary", "color/on-dark"), { w: 354, fill: "color/primary-elev", titleColor: "color/on-dark", subColor: "color/on-dark-body", rightW: 72, to: P3.mQr });
   splitRow(mLive, "Swimming Kids · 15:30", "Pool B · Coach Raka · Sisa 9", (r) => pill(r, "BOOK", "color/secondary", "color/on-dark"), { w: 354, fill: "color/primary-elev", titleColor: "color/on-dark", subColor: "color/on-dark-body", rightW: 72, to: P3.mQr });
 
@@ -2389,7 +2359,7 @@ async function run() {
   inputField(mb3, 350, "Email", "nama@email.com", { muted: true });
   passwordField(mb3, 350, "Kata Sandi (Ikon Mata Aktif)", "ContohKataSandi", true, false);
   btn(mb3, "Masuk Sekarang →", "color/secondary", "color/on-dark", { py: 12, full: true, to: P3.mQr });
-  btn(mb3, "Mode Kacamata Pintar (HUD) →", "color/primary", "hud/primary", { py: 11, full: true, to: P3.hud });
+  btn(mb3, "Lihat Tampilan Tablet (834px) →", "color/primary", "color/sky", { py: 11, full: true, to: P3.tablet });
 
   // M4 · MOBILE MEMBER QR & CIRCULAR QUOTA RING (390px)
   makeTag(pages[2], "M4 · MOBILE — TIKET QR & RING KUOTA (390PX)", 1380, 0);
@@ -2414,25 +2384,37 @@ async function run() {
 
   // W1 · SMARTWATCH (260px)
   makeTag(pages[2], "W1 · SMARTWATCH CHECK-IN (260PX)", 0, 920);
-  const wScr = box(null, "VERTICAL", { name: "W1 · Smartwatch QR Check-In (260px)", w: 260, p: 18, r: 36, gap: 10, fill: "hud/bg", stroke: "color/secondary", sw: 3, cross: "CENTER" });
+  const wScr = box(null, "VERTICAL", { name: "W1 · Smartwatch QR Check-In (260px)", w: 260, p: 18, r: 36, gap: 10, fill: "color/primary", stroke: "color/secondary", sw: 3, cross: "CENTER" });
   wScr.x = 0; wScr.y = 920; pages[2].appendChild(wScr); S[P3.watch] = wScr;
   pill(wScr, "FITSPACE WATCH", "color/secondary", "color/on-dark");
   wScr.appendChild(qrGraphic(104, true));
-  wrapTxt(wScr, "Pilates 14:00 · Studio A", "FitSpace/Label-Button", "hud/text", 220);
-  btn(wScr, "Buka HUD →", "hud/primary", "color/primary", { py: 9, full: true, style: "FitSpace/Body-Small", to: P3.hud });
+  wrapTxt(wScr, "Pilates 14:00 · Studio A", "FitSpace/Label-Button", "color/on-dark", 220);
+  btn(wScr, "Lihat Tablet →", "color/sky", "color/primary", { py: 9, full: true, style: "FitSpace/Body-Small", to: P3.tablet });
 
-  // HUD1 · SMART GLASSES WAVEGUIDE (640x420)
-  makeTag(pages[2], "HUD1 · SMART GLASSES OPTICAL HUD (640×420 · #000000)", 340, 920);
-  const hud3 = box(null, "VERTICAL", { name: "HUD1 · Smart Glasses Waveguide View (640x420)", w: 640, h: 420, px: 32, py: 26, r: 22, fill: "hud/bg", stroke: "hud/primary", sw: 2, align: "CENTER", cross: "CENTER" });
-  hud3.x = 340; hud3.y = 920; pages[2].appendChild(hud3); S[P3.hud] = hud3;
-  const hb3 = box(hud3, "VERTICAL", { w: 576, p: 24, r: 18, gap: 12, fill: "hud/surface", stroke: "hud/primary", sw: 2 });
-  txt(hb3, "OPTICAL HUD 1 / 4 · WCAG AAA > 14:1", "FitSpace/Mono-Badge", "hud/primary");
-  wrapTxt(hb3, "Reformer Pilates — Core Stability", "FitSpace/HUD-Title", "hud/text");
-  wrapTxt(hb3, "Studio A · 11 / 14 Peserta Hadir · Suara Aktif: \"Berikutnya\", \"Bacakan\", \"Keluar\".", "FitSpace/Body-Default", "hud/text-muted");
-  const hb3R = box(hb3, "HORIZONTAL", { w: 528, gap: 10 });
-  btn(hb3R, "← Sebelumnya", "hud/surface-alt", "hud/text", { w: 170, py: 12, stroke: "hud/primary" });
-  btn(hb3R, "Berikutnya →", "hud/primary", "color/primary", { w: 170, py: 12 });
-  btn(hb3R, "Keluar (Esc)", "hud/surface-alt", "hud/text-muted", { w: 168, py: 12, stroke: "hud/primary", to: P3.mHome });
+  // T1 · TABLET SPLIT-VIEW DASHBOARD (834px)
+  makeTag(pages[2], "T1 · TABLET PWA — DASHBOARD SPLIT-VIEW & DONUT CHART (834PX)", 340, 920);
+  const tabScr = makeScreen(pages[2], "T1 · Tablet PWA — Dashboard Split-View (834px)", 340, 920, 834);
+  S[P3.tablet] = tabScr;
+  const th1 = box(tabScr, "HORIZONTAL", { w: 834, px: 24, py: 14, fill: "color/surface", stroke: "color/border", align: "SPACE_BETWEEN", cross: "CENTER" });
+  brandLogo(th1, false, P3.mHome);
+  const thR = box(th1, "HORIZONTAL", { gap: 10, cross: "CENTER" });
+  pill(thR, "TABLET RESPONSIVE 834PX", "color/secondary-bg", "color/secondary");
+  btn(thR, "Smart TV Kiosk →", "color/primary", "color/on-dark", { px: 12, py: 7, r: 8, style: "FitSpace/Body-Small", to: P3.tv });
+  const tb1 = box(tabScr, "HORIZONTAL", { w: 834, p: 24, gap: 18, photo: "workspace", photoMode: "workspaceDark", cross: "MIN", clip: true });
+  const tLeft = box(tb1, "VERTICAL", { w: 420, p: 20, r: 16, gap: 12, fill: "color/surface", stroke: "color/border", shadow: true });
+  wrapTxt(tLeft, "Distribusi Kelas & Okupansi", "FitSpace/Heading-H3", "color/primary");
+  donutChartVisual(tLeft, [
+    { label: "Pilates", val: 30, pctLabel: "30%", color: "#1D4ED8" },
+    { label: "Swimming", val: 25, pctLabel: "25%", color: "#0EA5E9" },
+    { label: "Boxing", val: 20, pctLabel: "20%", color: "#15803D" },
+    { label: "Lainnya", val: 25, pctLabel: "25%", color: "#D97706" },
+  ], "68.4%", "Okupansi", 380, 142);
+  const tRight = box(tb1, "VERTICAL", { w: 348, p: 20, r: 16, gap: 10, grad: ["#0B1120", "#172554"], stroke: "color/secondary", shadow: true });
+  pill(tRight, "● JADWAL STUDIO LIVE", "color/primary-elev", "color/emerald-glow", "color/primary-border");
+  wrapTxt(tRight, "Sesi Mendatang Hari Ini", "FitSpace/Heading-H3", "color/on-dark");
+  splitRow(tRight, "Reformer Pilates · 14:00", "Studio A · Coach Nadia", (r) => pill(r, "13 SLOT", "color/secondary", "color/on-dark"), { w: 308, py: 8, fill: "color/primary-elev", titleColor: "color/on-dark", subColor: "color/on-dark-body", rightW: 84, to: P3.mQr });
+  splitRow(tRight, "Swimming Kids · 15:30", "Pool B · Coach Raka", (r) => pill(r, "9 SLOT", "color/secondary", "color/on-dark"), { w: 308, py: 8, fill: "color/primary-elev", titleColor: "color/on-dark", subColor: "color/on-dark-body", rightW: 84, to: P3.mQr });
+  btn(tRight, "← Kembali ke Mobile", "color/secondary", "color/on-dark", { py: 9, full: true, style: "FitSpace/Body-Small", to: P3.mHome });
 
   // TV1 · SMART TV LOBBY KIOSK (1280px)
   makeTag(pages[2], "TV1 · SMART TV & GYM LOBBY KIOSK (1280PX · 10-FOOT UI)", 0, 1460);
@@ -2440,7 +2422,7 @@ async function run() {
   tv.x = 0; tv.y = 1460; pages[2].appendChild(tv); S[P3.tv] = tv;
   const tvH = box(tv, "HORIZONTAL", { w: 1192, align: "SPACE_BETWEEN", cross: "CENTER" });
   const tvB = box(tvH, "VERTICAL", { w: 860, gap: 4 });
-  wrapTxt(tvB, "FITSPACE JAKARTA SELATAN · LOBBY KIOSK LIVE SCHEDULE", "FitSpace/Mono-Badge", "hud/primary");
+  wrapTxt(tvB, "FITSPACE JAKARTA SELATAN · LOBBY KIOSK LIVE SCHEDULE", "FitSpace/Mono-Badge", "color/sky");
   wrapTxt(tvB, "Jadwal Kelas Hari Ini — Tersinkronisasi Real-Time", "FitSpace/TV-Title", "color/on-dark");
   btn(tvH, "← Kembali ke Mobile", "color/secondary", "color/on-dark", { px: 18, py: 11, to: P3.mHome });
   for (const [tm, tn, tmeta, tst, tbg] of [
@@ -2449,7 +2431,7 @@ async function run() {
     ["18:00", "Boxing Conditioning", "Coach Dimas Pratama · Ring 1 (Lantai 1)", "SISA 12 SLOT · MEMBER 18+", "color/warning"],
   ]) {
     const row = box(tv, "HORIZONTAL", { w: 1192, px: 24, py: 16, r: 14, gap: 22, fill: "color/primary-elev", stroke: "color/primary-border", cross: "CENTER", align: "SPACE_BETWEEN" });
-    wrapTxt(row, tm, "FitSpace/Mono-KPI", "hud/primary", 105);
+    wrapTxt(row, tm, "FitSpace/Mono-KPI", "color/sky", 105);
     const mid = box(row, "VERTICAL", { w: 740, gap: 3 });
     wrapTxt(mid, tn, "FitSpace/TV-Row", "color/on-dark");
     wrapTxt(mid, tmeta, "FitSpace/Body-Lead", "color/on-dark-body");
@@ -2457,18 +2439,18 @@ async function run() {
   }
 
   await flushPageWork();
-  try { pages[2].flowStartingPoints = [{ nodeId: mob1.id, name: "Multi-Hardware Responsive Flow (Mobile → Watch → HUD → TV)" }]; } catch (_) {}
+  try { pages[2].flowStartingPoints = [{ nodeId: mob1.id, name: "Multi-Device Responsive Flow (Mobile → Smartwatch → Tablet → TV)" }]; } catch (_) {}
 
   await figma.setCurrentPageAsync(pages[0]);
   figma.viewport.scrollAndZoomIntoView([ovRole, sHome, sCat]);
   if (startToast && typeof startToast.cancel === "function") startToast.cancel();
-  console.log(`[FitSpace V9] Selesai! 48 frame 1:1 Web + ${wiredCount} tautan prototype (${overlayWiredCount} vertical dropdown overlays, broken=${brokenCount}) + 14 foto nyata.`);
-  figma.notify(`FitSpace V9 selesai! 48 frame + ${overlayWiredCount} dropdown vertikal interaktif + Donut Chart + Background 1:1 Web + ${wiredCount} tautan aktif!`, { timeout: 12000 });
+  console.log(`[FitSpace V10] Selesai! 47 frame 1:1 Web + ${wiredCount} tautan prototype (${overlayWiredCount} vertical dropdown overlays, broken=${brokenCount}) + 14 foto nyata.`);
+  figma.notify(`FitSpace V10 selesai! 47 frame + ${overlayWiredCount} dropdown vertikal interaktif + Donut Chart + Background 1:1 Web + ${wiredCount} tautan aktif!`, { timeout: 12000 });
   figma.closePlugin();
 }
 
 run().catch((err) => {
-  console.error("[FitSpace V9 Error]", err);
+  console.error("[FitSpace V10 Error]", err);
   const msg = err && err.message ? err.message : String(err);
   const hint = /read[- ]?only|permission|edit/i.test(msg)
     ? " — File Figma ini sedang View-only. Klik 'Duplicate to your drafts' lalu jalankan ulang plugin."
